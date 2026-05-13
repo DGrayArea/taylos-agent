@@ -1,29 +1,33 @@
-import { NextResponse } from 'next/server';
-import { processFinancialData } from '@/lib/agent/dataIntake';
-import { RawDocumentPayload } from '@/lib/agent/types';
+// src/app/api/investigate/route.ts
+// PURPOSE: AI-powered root cause investigation for a single anomaly.
+// Called after /api/analyze when the user clicks "Investigate" on an anomaly.
+//
+// PIPELINE:
+//   Single Anomaly → Groq AI → AIInvestigationResult
+//
+// TODO: Once groq.ts is set up, this becomes the live AI endpoint.
+
+import { NextResponse } from "next/server";
+import { investigateWithAI } from "@/app/lib/anomaly";
+import { Anomaly } from "@/lib/agent/types";
 
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    
-    // Expecting an array of RawDocumentPayload
-    const payloads: RawDocumentPayload[] = Array.isArray(body) ? body : [body];
+    const anomaly: Anomaly = body.anomaly;
 
-    if (!payloads || payloads.length === 0) {
-      return NextResponse.json(
-        { error: 'No document payloads provided.' },
-        { status: 400 }
-      );
+    if (!anomaly || !anomaly.id) {
+      return NextResponse.json({ error: "No anomaly provided." }, { status: 400 });
     }
 
-    // Process the data through the agentic intake engine
-    const unifiedModel = processFinancialData(payloads);
+    const result = await investigateWithAI(anomaly);
 
-    return NextResponse.json(unifiedModel);
+    return NextResponse.json({ anomaly_id: anomaly.id, investigation: result }, { status: 200 });
+
   } catch (error: any) {
-    console.error('Error in Data Intake Agent:', error);
+    console.error("[/api/investigate] Error:", error);
     return NextResponse.json(
-      { error: 'Failed to process financial data.', details: error.message },
+      { error: "Investigation failed.", details: error.message },
       { status: 500 }
     );
   }
