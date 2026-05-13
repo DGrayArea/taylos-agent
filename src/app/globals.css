@@ -1,0 +1,58 @@
+@import "tailwindcss";
+
+:root {
+  --background: #0a1628;
+  --foreground: #f3f4f6;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans), "Inter", "Outfit", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+
+  /* Custom Color Palette */
+  --color-navy: #0a1628;
+  --color-charcoal: #1a2332;
+  --color-card: #111827;
+  --color-card-hover: #1a2a3a;
+  --color-gold: #d4af37;
+  --color-gold-light: #c9a961;
+  --color-success: #10b981;
+  --color-warning: #f59e0b;
+  --color-critical: #ef4444;
+  --color-neutral: #f3f4f6;
+
+  /* Layered Shadows for Depth */
+  --shadow-level-1: 0 4px 6px rgba(0, 0, 0, 0.1);
+  --shadow-level-2: 0 10px 25px rgba(0, 0, 0, 0.15);
+  --shadow-level-3: 0 20px 40px rgba(212, 175, 55, 0.1);
+  --shadow-glow: 0 0 15px rgba(212, 175, 55, 0.3);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Custom Scrollbar for sleek look */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #1a2332;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #2a3a5a;
+}
