@@ -7,7 +7,7 @@
 // You already wrote the full Feature 3 investigation logic — translate it here
 // into natural language for the AI model.
 
-import { Anomaly } from "@/lib/agent/types";
+import { Anomaly } from "@/lib/types";
 
 // ─────────────────────────────────────────────────────────────
 // PROMPT 1: Root Cause Investigation

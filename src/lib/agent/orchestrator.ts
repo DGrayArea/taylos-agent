@@ -4,7 +4,7 @@ import {
   MasterUnifiedModel,
   Investigation,
   SeverityLevel
-} from './types';
+} from '../types';
 import { processFinancialData } from './dataIntake';
 import { investigateAnomaly } from './investigator';
 

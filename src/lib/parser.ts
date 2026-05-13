@@ -20,12 +20,12 @@
  * TODO: Install pdf-parse and uncomment.
  */
 export async function extractTextFromPDF(buffer: Buffer): Promise<string> {
-  // TODO: Install pdf-parse: pnpm add pdf-parse @types/pdf-parse
-  // const pdf = await import("pdf-parse");
-  // const data = await pdf.default(buffer);
-  // return data.text;
-
-  throw new Error("PDF parsing not yet implemented. Install pdf-parse.");
+  // Import the parser directly to bypass pdf-parse's internal test runner,
+  // which tries to open './test/data/05-versions-space.pdf' on module load.
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const pdfParse = require("pdf-parse/lib/pdf-parse.js") as (buf: Buffer) => Promise<{ text: string }>;
+  const data = await pdfParse(buffer);
+  return data.text;
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -42,7 +42,9 @@ export function parseCSV(buffer: Buffer): Record<string, string>[] {
 
   if (lines.length < 2) return [];
 
-  const headers = lines[0].split(",").map((h) => h.trim().replace(/^"|"$/g, ""));
+  const headers = lines[0]
+    .split(",")
+    .map((h) => h.trim().replace(/^"|"$/g, ""));
 
   return lines.slice(1).map((line) => {
     const values = line.split(",").map((v) => v.trim().replace(/^"|"$/g, ""));
@@ -59,9 +61,12 @@ export function parseCSV(buffer: Buffer): Record<string, string>[] {
  */
 export function detectDocumentType(filename: string): string {
   const lower = filename.toLowerCase();
-  if (lower.includes("statement") || lower.includes("bank")) return "bank_statement";
+  if (lower.includes("statement") || lower.includes("bank"))
+    return "bank_statement";
   if (lower.includes("invoice") || lower.includes("receipt")) return "invoice";
-  if (lower.includes("complaint") || lower.includes("support")) return "customer_complaint";
-  if (lower.includes("log") || lower.includes("history")) return "transaction_log";
+  if (lower.includes("complaint") || lower.includes("support"))
+    return "customer_complaint";
+  if (lower.includes("log") || lower.includes("history"))
+    return "transaction_log";
   return "unknown";
 }

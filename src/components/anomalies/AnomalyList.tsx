@@ -8,12 +8,18 @@ import { ChevronDown, ChevronUp, AlertCircle } from "lucide-react";
 import { InvestigationPanel } from "../investigation/InvestigationPanel";
 import { AnimatePresence } from "framer-motion";
 
-export function AnomalyList() {
-  const [expandedId, setExpandedId] = useState<string | null>(mockAnomalies[0].id);
+import { Anomaly } from "@/lib/types";
+
+interface AnomalyListProps {
+  anomalies?: Anomaly[];
+}
+
+export function AnomalyList({ anomalies = mockAnomalies as any }: AnomalyListProps) {
+  const [expandedId, setExpandedId] = useState<string | null>(anomalies[0]?.id || null);
 
   return (
     <div className="space-y-4">
-      {mockAnomalies.map((anomaly, i) => {
+      {anomalies.map((anomaly, i) => {
         const isExpanded = expandedId === anomaly.id;
 
         return (

@@ -9,26 +9,28 @@
 //   - pnpm add jspdf                 (programmatic PDF)
 // For email, use Resend or Nodemailer.
 
-import { ComprehensiveAnalysis } from "@/lib/agent/types";
+import { ComprehensiveAnalysis } from "@/lib/types";
 
 // ─────────────────────────────────────────────────────────────
 // Generate PDF Report
 // ─────────────────────────────────────────────────────────────
-export async function generatePDFReport(analysis: ComprehensiveAnalysis): Promise<Buffer> {
+export async function generatePDFReport(
+  analysis: ComprehensiveAnalysis,
+): Promise<Buffer> {
   // TODO: Generate PDF from analysis data
   // Example with jsPDF:
-  // const { jsPDF } = await import("jspdf");
-  // const doc = new jsPDF();
-  // doc.text(analysis.executive_summary.finding, 10, 10);
-  // return Buffer.from(doc.output("arraybuffer"));
-
-  throw new Error("PDF generation not yet implemented.");
+  const { jsPDF } = await import("jspdf");
+  const doc = new jsPDF();
+  doc.text(analysis.executive_summary.finding, 10, 10);
+  return Buffer.from(doc.output("arraybuffer"));
 }
 
 // ─────────────────────────────────────────────────────────────
 // Export as JSON
 // ─────────────────────────────────────────────────────────────
-export async function exportAsJSON(analysis: ComprehensiveAnalysis): Promise<string> {
+export async function exportAsJSON(
+  analysis: ComprehensiveAnalysis,
+): Promise<string> {
   // This one is already functional — just serialize
   return JSON.stringify(analysis, null, 2);
 }
@@ -51,19 +53,31 @@ export async function emailReport(to: string, analysis: ComprehensiveAnalysis) {
   return { success: true };
 }
 
+import { createClient } from "@/lib/supabase/server";
+
 // ─────────────────────────────────────────────────────────────
 // Save report to history (DB)
 // ─────────────────────────────────────────────────────────────
 export async function saveReportToHistory(analysis: ComprehensiveAnalysis) {
-  // TODO: Save to your database so it shows in /history
-  // const { error } = await supabase.from("reports").insert({
-  //   date: analysis.analysis_metadata.analysis_date,
-  //   documents: analysis.analysis_metadata.documents_processed,
-  //   issues: analysis.feature_2_anomalies.total_anomalies_found,
-  //   status: "Complete",
-  //   data: analysis,
-  // });
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("reports")
+    .insert([
+      {
+        date: analysis.analysis_metadata.analysis_date,
+        documents: analysis.analysis_metadata.documents_processed,
+        issues: analysis.feature_2_anomalies.total_anomalies_found,
+        status: "Complete",
+        data: analysis,
+      },
+    ])
+    .select()
+    .single();
 
-  console.log("[saveReportToHistory] TODO: Connect database.");
-  return { success: true, id: `REP-${Date.now()}` };
+  if (error) {
+    console.error("[saveReportToHistory] Error:", error);
+    throw new Error(error.message);
+  }
+
+  return { success: true, id: data.id };
 }

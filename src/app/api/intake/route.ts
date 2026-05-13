@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
-import { processFinancialData } from '@/lib/agent/dataIntake';
-import { RawDocumentPayload } from '@/lib/agent/types';
+import { runPlatformAnalysis } from '@/lib/analysis';
+import { RawDocumentPayload } from '@/lib/types';
 
 export async function POST(request: Request) {
   try {
@@ -16,8 +16,9 @@ export async function POST(request: Request) {
       );
     }
 
-    // Process the data through the agentic intake engine
-    const unifiedModel = processFinancialData(payloads);
+    // Process the data through the Platform Analysis engine
+    const analysis = await runPlatformAnalysis(payloads);
+    const unifiedModel = analysis.feature_1_data_intake;
 
     return NextResponse.json(unifiedModel);
   } catch (error: any) {

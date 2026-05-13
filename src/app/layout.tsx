@@ -3,6 +3,10 @@ import "./globals.css";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { Header } from "@/components/layout/Header";
 import { MobileMenuProvider } from "@/lib/MobileMenuContext";
+import { Geist } from "next/font/google";
+import { cn } from "@/lib/utils";
+
+const geist = Geist({subsets:['latin'],variable:'--font-sans'});
 
 export const metadata: Metadata = {
   title: "Taylos agent | Financial Intelligence Dashboard",
@@ -15,7 +19,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" className={cn("font-sans", geist.variable)}>
       <body className="bg-[var(--color-navy)] text-white min-h-screen font-sans selection:bg-[var(--color-gold)]/30">
         <MobileMenuProvider>
           <Sidebar />

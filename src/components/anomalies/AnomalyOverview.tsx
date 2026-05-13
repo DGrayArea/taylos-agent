@@ -3,7 +3,25 @@
 import { FloatingCard } from "../ui/FloatingCard";
 import { AlertTriangle, ShieldAlert, Info, AlertCircle } from "lucide-react";
 
-export function AnomalyOverview() {
+interface AnomalyOverviewProps {
+  stats?: {
+    critical: number;
+    high: number;
+    medium: number;
+    low: number;
+    totalRecords?: number;
+  };
+}
+
+const defaultStats = {
+  critical: 1,
+  high: 1,
+  medium: 1,
+  low: 1,
+  totalRecords: 2569
+};
+
+export function AnomalyOverview({ stats = defaultStats }: AnomalyOverviewProps) {
   return (
     <div className="mb-8">
       <div className="flex items-center justify-between mb-6">
@@ -11,7 +29,7 @@ export function AnomalyOverview() {
           <span className="w-1.5 h-8 bg-[var(--color-critical)] rounded-full mr-3 shadow-[0_0_10px_rgba(239,68,68,0.5)]"></span>
           Issues Detected
         </h2>
-        <span className="text-gray-400 text-sm">Based on 2,569 records analyzed</span>
+        <span className="text-gray-400 text-sm">Based on {stats.totalRecords?.toLocaleString()} records analyzed</span>
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -19,7 +37,7 @@ export function AnomalyOverview() {
           <div className="flex justify-between items-start">
             <div>
               <div className="text-sm font-medium text-gray-400 mb-1">Critical / Fraud</div>
-              <div className="text-4xl font-bold text-white">1</div>
+              <div className="text-4xl font-bold text-white">{stats.critical}</div>
             </div>
             <ShieldAlert className="w-8 h-8 text-[var(--color-critical)] opacity-80" />
           </div>
@@ -29,7 +47,7 @@ export function AnomalyOverview() {
           <div className="flex justify-between items-start">
             <div>
               <div className="text-sm font-medium text-gray-400 mb-1">High Priority</div>
-              <div className="text-4xl font-bold text-white">1</div>
+              <div className="text-4xl font-bold text-white">{stats.high}</div>
             </div>
             <AlertTriangle className="w-8 h-8 text-[var(--color-warning)] opacity-80" />
           </div>
@@ -39,7 +57,7 @@ export function AnomalyOverview() {
           <div className="flex justify-between items-start">
             <div>
               <div className="text-sm font-medium text-gray-400 mb-1">Medium</div>
-              <div className="text-4xl font-bold text-white">1</div>
+              <div className="text-4xl font-bold text-white">{stats.medium}</div>
             </div>
             <AlertCircle className="w-8 h-8 text-[var(--color-gold)] opacity-80" />
           </div>
@@ -49,7 +67,7 @@ export function AnomalyOverview() {
           <div className="flex justify-between items-start">
             <div>
               <div className="text-sm font-medium text-gray-400 mb-1">Low / Info</div>
-              <div className="text-4xl font-bold text-white">1</div>
+              <div className="text-4xl font-bold text-white">{stats.low}</div>
             </div>
             <Info className="w-8 h-8 text-[var(--color-success)] opacity-80" />
           </div>

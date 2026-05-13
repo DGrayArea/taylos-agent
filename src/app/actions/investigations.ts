@@ -8,6 +8,8 @@
 // 1. Set up a database (Supabase, Prisma+Postgres, etc.)
 // 2. Replace the TODO stubs below with your DB calls
 
+import { createClient } from "@/lib/supabase/server";
+
 // ─────────────────────────────────────────────────────────────
 // Save an investigation result to the database
 // ─────────────────────────────────────────────────────────────
@@ -18,37 +20,56 @@ export async function saveInvestigation(data: {
   summary: string;
   recommendations: string[];
 }) {
-  // TODO: Save to your database
-  // Example with Supabase:
-  // const { error } = await supabase.from("investigations").insert(data);
-  // if (error) throw new Error(error.message);
+  const supabase = await createClient();
+  const { data: result, error } = await supabase
+    .from("investigations")
+    .insert([data])
+    .select()
+    .single();
 
-  console.log("[saveInvestigation] TODO: Connect database. Data received:", data);
-  return { success: true, id: `inv_${Date.now()}` };
+  if (error) {
+    console.error("[saveInvestigation] Error:", error);
+    throw new Error(error.message);
+  }
+
+  return { success: true, data: result };
 }
 
 // ─────────────────────────────────────────────────────────────
-// Update investigation status (e.g. mark as resolved)
+// Update investigation status
 // ─────────────────────────────────────────────────────────────
 export async function updateInvestigationStatus(
   id: string,
-  status: "open" | "in_review" | "resolved" | "dismissed"
+  status: "open" | "in_review" | "resolved" | "dismissed",
 ) {
-  // TODO: Update in your database
-  // const { error } = await supabase.from("investigations").update({ status }).eq("id", id);
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("investigations")
+    .update({ status })
+    .eq("id", id);
 
-  console.log(`[updateInvestigationStatus] TODO: Update ${id} → ${status}`);
+  if (error) {
+    console.error("[updateInvestigationStatus] Error:", error);
+    throw new Error(error.message);
+  }
+
   return { success: true };
 }
 
 // ─────────────────────────────────────────────────────────────
-// Fetch all investigations for the current user/session
+// Fetch all investigations
 // ─────────────────────────────────────────────────────────────
 export async function getInvestigations() {
-  // TODO: Fetch from your database
-  // const { data, error } = await supabase.from("investigations").select("*");
-  // return data ?? [];
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("investigations")
+    .select("*")
+    .order("created_at", { ascending: false });
 
-  console.log("[getInvestigations] TODO: Connect database.");
-  return [];
+  if (error) {
+    console.error("[getInvestigations] Error:", error);
+    return [];
+  }
+
+  return data ?? [];
 }

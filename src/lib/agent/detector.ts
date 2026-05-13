@@ -7,7 +7,7 @@ import {
   DetectionResult,
   AnomalySummary,
   SeverityLevel
-} from './types';
+} from '../types';
 
 /**
  * Intelligent Anomaly Detection Engine for Taylos Agent

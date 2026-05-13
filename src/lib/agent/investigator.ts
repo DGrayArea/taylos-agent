@@ -7,7 +7,7 @@ import {
   UnifiedTransaction,
   UnifiedInvoice,
   UnifiedComplaint
-} from './types';
+} from '../types';
 
 /**
  * Root Cause Investigation Engine for Taylos Agent

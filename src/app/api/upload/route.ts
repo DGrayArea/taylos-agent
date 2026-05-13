@@ -8,8 +8,9 @@
 //   ↓ Returns the payloads (client then calls /api/analyze)
 
 import { NextResponse } from "next/server";
-import { parseCSV, detectDocumentType } from "@/app/lib/parser";
-import { RawDocumentPayload } from "@/lib/agent/types";
+import { parseCSV, detectDocumentType } from "@/lib/parser";
+import { RawDocumentPayload } from "@/lib/types";
+import { extractTextFromPDF } from "@/lib/parser";
 
 export async function POST(request: Request) {
   try {
@@ -17,7 +18,10 @@ export async function POST(request: Request) {
     const files = formData.getAll("files") as File[];
 
     if (!files || files.length === 0) {
-      return NextResponse.json({ error: "No files uploaded." }, { status: 400 });
+      return NextResponse.json(
+        { error: "No files uploaded." },
+        { status: 400 },
+      );
     }
 
     const payloads: RawDocumentPayload[] = [];
@@ -34,19 +38,17 @@ export async function POST(request: Request) {
         // CSV: parse into structured rows
         structured_data = parseCSV(buffer);
         raw_text = buffer.toString("utf-8");
-
-      } else if (mimeType === "application/json" || file.name.endsWith(".json")) {
+      } else if (
+        mimeType === "application/json" ||
+        file.name.endsWith(".json")
+      ) {
         // JSON: parse directly
         const parsed = JSON.parse(buffer.toString("utf-8"));
         structured_data = Array.isArray(parsed) ? parsed : [parsed];
         raw_text = buffer.toString("utf-8");
-
       } else if (mimeType === "application/pdf" || file.name.endsWith(".pdf")) {
-        // PDF: TODO — install pdf-parse and use extractTextFromPDF()
-        // import { extractTextFromPDF } from "@/app/lib/parser";
-        // raw_text = await extractTextFromPDF(buffer);
-        raw_text = "[PDF parsing not yet implemented]";
-
+        // PDF extraction
+        raw_text = await extractTextFromPDF(buffer);
       } else {
         // Plain text fallback
         raw_text = buffer.toString("utf-8");
@@ -61,12 +63,11 @@ export async function POST(request: Request) {
     }
 
     return NextResponse.json({ payloads }, { status: 200 });
-
   } catch (error: any) {
     console.error("[/api/upload] Error:", error);
     return NextResponse.json(
       { error: "File processing failed.", details: error.message },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

@@ -5,7 +5,7 @@ import {
   UnifiedInvoice, 
   UnifiedComplaint,
   DocumentSourceType
-} from './types';
+} from '../types';
 import { normalizeDate, normalizeMerchant, normalizeAmountAndDirection } from './normalizers';
 import { detectAnomalies } from './detector';
 
@@ -42,6 +42,9 @@ export function processFinancialData(payloads: RawDocumentPayload[]): MasterUnif
 
   let complaintCount = 0;
   const complaintIssues = new Set<string>();
+
+  const dataGaps: string[] = [];
+  const parsingIssues: string[] = [];
 
   // Process each document
   payloads.forEach(doc => {
@@ -132,8 +135,6 @@ export function processFinancialData(payloads: RawDocumentPayload[]): MasterUnif
   const totalProcessed = transactions.length + invoices.length + complaints.length;
   // Base confidence starts at 100%, degrades for missing/unknown data
   let dataQualityScore = 1.0;
-  const dataGaps: string[] = [];
-  const parsingIssues: string[] = [];
 
   if (totalProcessed === 0) {
     dataQualityScore = 0;

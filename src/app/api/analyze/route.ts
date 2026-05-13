@@ -8,8 +8,8 @@
 //   ↓ Returns ComprehensiveAnalysis JSON
 
 import { NextResponse } from "next/server";
-import { analyzeFinancialData } from "@/lib/agent/orchestrator";
-import { RawDocumentPayload } from "@/lib/agent/types";
+import { runPlatformAnalysis } from "@/lib/analysis";
+import { RawDocumentPayload } from "@/lib/types";
 
 export async function POST(request: Request) {
   try {
@@ -24,8 +24,8 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "No document payloads provided." }, { status: 400 });
     }
 
-    // Run the full 3-feature pipeline
-    const analysis = analyzeFinancialData(payloads);
+    // Run the Platform AI Analysis pipeline
+    const analysis = await runPlatformAnalysis(payloads);
 
     return NextResponse.json(analysis, { status: 200 });
 

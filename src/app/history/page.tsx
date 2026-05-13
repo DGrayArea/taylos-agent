@@ -1,27 +1,24 @@
-"use client";
-
 import { motion } from "framer-motion";
 import { FloatingCard } from "@/components/ui/FloatingCard";
 import { Badge } from "@/components/ui/Badge";
 import { FileText, Download } from "lucide-react";
+import { createClient } from "@/lib/supabase/server";
 
-const mockHistory = [
-  { id: "REP-042", date: "2023-10-15", documents: 3, issues: 2, status: "Complete" },
-  { id: "REP-041", date: "2023-10-10", documents: 1, issues: 0, status: "Complete" },
-  { id: "REP-040", date: "2023-10-05", documents: 5, issues: 4, status: "Complete" },
-];
+export default async function HistoryPage() {
+  const supabase = await createClient();
+  const { data: history, error } = await supabase
+    .from("reports")
+    .select("*")
+    .order("created_at", { ascending: false });
 
-export default function HistoryPage() {
   return (
     <div className="p-4 md:p-8 max-w-7xl mx-auto space-y-10 pb-24 overflow-x-hidden">
-      <motion.div 
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-      >
+      <div>
         <h1 className="text-3xl md:text-4xl font-bold mb-2">Analysis History</h1>
-        <p className="text-gray-400 text-sm md:text-base">Review previously generated intelligence reports and findings.</p>
-      </motion.div>
+        <p className="text-gray-400 text-sm md:text-base">
+          Review previously generated intelligence reports and findings.
+        </p>
+      </div>
 
       <FloatingCard className="p-0 overflow-hidden">
         <div className="overflow-x-auto">
@@ -37,23 +34,19 @@ export default function HistoryPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-white/5">
-              {mockHistory.map((row, i) => (
-                <motion.tr 
-                  initial={{ opacity: 0, x: -10 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: i * 0.1 }}
-                  key={row.id} 
-                  className="hover:bg-white/[0.02] transition-colors"
-                >
+              {history?.map((row, i) => (
+                <tr key={row.id} className="hover:bg-white/[0.02] transition-colors">
                   <td className="p-4 font-medium text-white flex items-center gap-2">
                     <FileText className="w-4 h-4 text-[var(--color-gold)]" />
-                    {row.id}
+                    {row.id.substring(0, 8)}...
                   </td>
                   <td className="p-4 text-sm text-gray-300">{row.date}</td>
                   <td className="p-4 text-sm text-gray-300">{row.documents}</td>
                   <td className="p-4 text-sm">
                     {row.issues > 0 ? (
-                      <span className="text-[var(--color-critical)] font-bold">{row.issues} detected</span>
+                      <span className="text-[var(--color-critical)] font-bold">
+                        {row.issues} detected
+                      </span>
                     ) : (
                       <span className="text-[var(--color-success)]">All clear</span>
                     )}
@@ -66,8 +59,15 @@ export default function HistoryPage() {
                       <Download className="w-4 h-4" />
                     </button>
                   </td>
-                </motion.tr>
+                </tr>
               ))}
+              {(!history || history.length === 0) && (
+                <tr>
+                  <td colSpan={6} className="p-12 text-center text-gray-500">
+                    No analysis history found. Upload documents to get started.
+                  </td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>
