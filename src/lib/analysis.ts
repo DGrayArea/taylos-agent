@@ -51,17 +51,35 @@ export async function runPlatformAnalysis(
     },
     feature_1_data_intake: {
       unified_data: {
+        documents_processed: {
+          bank_statements: {
+            count: 0,
+            date_range: "N/A",
+            transactions_extracted: 0,
+            total_inflow: 0,
+            total_outflow: 0,
+          },
+          invoices: {
+            count: 0,
+            total_amount: 0,
+            vendors: [],
+          },
+          customer_complaints: {
+            count: 0,
+            sentiment: "Neutral",
+            key_issues: [],
+          },
+        },
         transactions: [],
         invoices: [],
         complaints: [],
         metadata: {
-          processing_timestamp: new Date().toISOString(),
+          analysis_date: new Date().toISOString(),
           data_quality_score: 0.95,
-          source_distribution: {},
           parsing_issues: [],
-          data_gaps: []
-        }
-      }
+          data_gaps: [],
+        },
+      },
     },
     feature_2_anomalies: {
       total_anomalies_found: anomalyCount,
@@ -69,19 +87,24 @@ export async function runPlatformAnalysis(
         critical: criticalCount,
         high: 1,
         medium: 0,
-        low: 0
+        low: 0,
       },
       anomaly_list: [
         {
           id: "ANOM-001",
           type: "DUPLICATE_TRANSACTION",
+          category: "Structural",
           severity: "CRITICAL",
-          description: "Potential duplicate charge found in Amazon Marketplace transactions.",
-          affected_amounts: [500.00, 500.00],
+          anomaly_score: 98,
+          confidence: 95,
+          description:
+            "Potential duplicate charge found in Amazon Marketplace transactions.",
+          affected_transactions: ["TX-101", "TX-102"],
+          affected_amounts: [500.0, 500.0],
           evidence_points: ["Same merchant", "Same amount", "Within 2 hours"],
-          metadata: {}
-        }
-      ]
+          related_documents: [payloads[0]?.filename || "unknown"],
+        },
+      ],
     },
     feature_3_investigations: {
       investigations: [] // Individual investigations are triggered via /api/investigate

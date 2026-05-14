@@ -46,17 +46,28 @@ export function AnomalyList({ anomalies = mockAnomalies as any }: AnomalyListPro
               <div className="flex items-center gap-8 w-1/2 justify-end">
                 <div className="text-right hidden md:block">
                   <div className="text-sm font-medium text-white mb-1">
-                    {anomaly.amount !== null ? `$${anomaly.amount.toLocaleString(undefined, { minimumFractionDigits: 2 })}` : "N/A"}
+                    {anomaly.affected_amounts && anomaly.affected_amounts.length > 0
+                      ? `$${anomaly.affected_amounts[0].toLocaleString(undefined, {
+                          minimumFractionDigits: 2,
+                        })}`
+                      : "N/A"}
                   </div>
-                  <div className="text-xs text-gray-500">{anomaly.date}</div>
+                  <div className="text-xs text-gray-500">
+                    {anomaly.first_occurrence || "Unknown Date"}
+                  </div>
                 </div>
 
-                <Badge variant={anomaly.severity} className="w-24 justify-center py-1">
+                <Badge
+                  variant={anomaly.severity as any}
+                  className="w-24 justify-center py-1"
+                >
                   {anomaly.severity}
                 </Badge>
 
                 <div className="text-center w-16">
-                  <div className="text-sm font-bold text-white">{anomaly.score}</div>
+                  <div className="text-sm font-bold text-white">
+                    {anomaly.anomaly_score}
+                  </div>
                   <div className="text-[10px] text-gray-500 uppercase">Score</div>
                 </div>
 
