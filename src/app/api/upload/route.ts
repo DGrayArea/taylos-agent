@@ -8,8 +8,18 @@
 //   ↓ Returns the payloads (client then calls /api/analyze)
 
 import { NextResponse } from "next/server";
-import { parseCSV, detectDocumentType, parseExcel, extractTextFromPDF } from "@/lib/parser";
+import {
+  parseCSV,
+  detectDocumentType,
+  parseExcel,
+  extractTextFromPDF,
+} from "@/lib/parser";
 import { RawDocumentPayload } from "@/lib/types";
+
+function getErrorMessage(error: unknown): string {
+  if (error instanceof Error) return error.message;
+  return String(error);
+}
 
 export async function POST(request: Request) {
   try {
@@ -30,11 +40,12 @@ export async function POST(request: Request) {
       const docType = detectDocumentType(file.name);
       const mimeType = file.type;
 
-      let structured_data: any[] | undefined;
+      let structured_data: Array<Record<string, unknown>> | undefined;
       let raw_text = "";
 
       if (
-        mimeType === "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" ||
+        mimeType ===
+          "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" ||
         mimeType === "application/vnd.ms-excel" ||
         file.name.endsWith(".xlsx") ||
         file.name.endsWith(".xls")
@@ -53,7 +64,9 @@ export async function POST(request: Request) {
       ) {
         // JSON: parse directly
         const parsed = JSON.parse(buffer.toString("utf-8"));
-        structured_data = Array.isArray(parsed) ? parsed : [parsed];
+        structured_data = Array.isArray(parsed)
+          ? (parsed as Array<Record<string, unknown>>)
+          : [parsed as Record<string, unknown>];
         raw_text = buffer.toString("utf-8");
       } else if (mimeType === "application/pdf" || file.name.endsWith(".pdf")) {
         // PDF extraction
@@ -72,10 +85,10 @@ export async function POST(request: Request) {
     }
 
     return NextResponse.json({ payloads }, { status: 200 });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("[/api/upload] Error:", error);
     return NextResponse.json(
-      { error: "File processing failed.", details: error.message },
+      { error: "File processing failed.", details: getErrorMessage(error) },
       { status: 500 },
     );
   }

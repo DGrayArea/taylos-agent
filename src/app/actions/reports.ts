@@ -2,14 +2,14 @@
 
 // src/app/actions/reports.ts
 // PURPOSE: Server Actions for generating and managing reports.
-//
-// WHAT YOU NEED TO DO:
-// For PDF generation, choose a library:
-//   - pnpm add @react-pdf/renderer   (React-based PDF)
-//   - pnpm add jspdf                 (programmatic PDF)
-// For email, use Resend or Nodemailer.
 
+import { createClient } from "@/lib/supabase/server";
 import { ComprehensiveAnalysis } from "@/lib/types";
+
+function getErrorMessage(error: unknown): string {
+  if (error instanceof Error) return error.message;
+  return String(error);
+}
 
 // ─────────────────────────────────────────────────────────────
 // Generate PDF Report
@@ -17,8 +17,6 @@ import { ComprehensiveAnalysis } from "@/lib/types";
 export async function generatePDFReport(
   analysis: ComprehensiveAnalysis,
 ): Promise<Buffer> {
-  // TODO: Generate PDF from analysis data
-  // Example with jsPDF:
   const { jsPDF } = await import("jspdf");
   const doc = new jsPDF();
   doc.text(analysis.executive_summary.finding, 10, 10);
@@ -31,7 +29,6 @@ export async function generatePDFReport(
 export async function exportAsJSON(
   analysis: ComprehensiveAnalysis,
 ): Promise<string> {
-  // This one is already functional — just serialize
   return JSON.stringify(analysis, null, 2);
 }
 
@@ -39,32 +36,50 @@ export async function exportAsJSON(
 // Email Summary
 // ─────────────────────────────────────────────────────────────
 export async function emailReport(to: string, analysis: ComprehensiveAnalysis) {
-  // TODO: Set up Resend: pnpm add resend
-  // import { Resend } from "resend";
-  // const resend = new Resend(process.env.RESEND_API_KEY);
-  // await resend.emails.send({
-  //   from: "reports@yourdomain.com",
-  //   to,
-  //   subject: `Financial Intelligence Report — ${analysis.analysis_metadata.analysis_date}`,
-  //   text: analysis.executive_summary.finding,
-  // });
+  console.log(
+    `[emailReport] TODO: Set up email provider. Recipient: ${to}. Summary: ${analysis.executive_summary.finding}`,
+  );
 
-  console.log(`[emailReport] TODO: Set up email provider. Recipient: ${to}`);
   return { success: true };
 }
 
-import { createClient } from "@/lib/supabase/server";
-
 // ─────────────────────────────────────────────────────────────
-// Save report to history (DB)
+// Save report to history (DB) — with deduplication guard
 // ─────────────────────────────────────────────────────────────
 export async function saveReportToHistory(analysis: ComprehensiveAnalysis) {
   const supabase = await createClient();
+
+  const analysisDate = analysis.analysis_metadata.analysis_date;
+
+  const windowStart = new Date(
+    new Date(analysisDate).getTime() - 60_000,
+  ).toISOString();
+  const windowEnd = new Date(
+    new Date(analysisDate).getTime() + 60_000,
+  ).toISOString();
+
+  const { data: existing, error: existingError } = await supabase
+    .from("reports")
+    .select("id")
+    .gte("date", windowStart)
+    .lte("date", windowEnd)
+    .eq("documents", analysis.analysis_metadata.documents_processed)
+    .maybeSingle();
+
+  if (existingError) {
+    console.error("[saveReportToHistory] Dedup check failed:", existingError);
+    throw new Error(existingError.message);
+  }
+
+  if (existing?.id) {
+    return { success: true, id: existing.id, deduplicated: true };
+  }
+
   const { data, error } = await supabase
     .from("reports")
     .insert([
       {
-        date: analysis.analysis_metadata.analysis_date,
+        date: analysisDate,
         documents: analysis.analysis_metadata.documents_processed,
         issues: analysis.feature_2_anomalies.total_anomalies_found,
         status: "Complete",

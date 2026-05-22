@@ -23,7 +23,9 @@ export async function extractTextFromPDF(buffer: Buffer): Promise<string> {
   // Import the parser directly to bypass pdf-parse's internal test runner,
   // which tries to open './test/data/05-versions-space.pdf' on module load.
   // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const pdfParse = require("pdf-parse/lib/pdf-parse.js") as (buf: Buffer) => Promise<{ text: string }>;
+  const pdfParse = require("pdf-parse/lib/pdf-parse.js") as (
+    buf: Buffer,
+  ) => Promise<{ text: string }>;
   const data = await pdfParse(buffer);
   return data.text;
 }
@@ -52,7 +54,6 @@ export function parseCSV(buffer: Buffer): Record<string, string>[] {
   });
 }
 
-
 // ─────────────────────────────────────────────────────────────
 // Excel Text & Data Extraction
 // ─────────────────────────────────────────────────────────────
@@ -60,7 +61,10 @@ export function parseCSV(buffer: Buffer): Record<string, string>[] {
 /**
  * Parses an Excel buffer (.xlsx, .xls) into structured rows and CSV-style text.
  */
-export function parseExcel(buffer: Buffer): { structuredData: any[]; csvText: string } {
+export function parseExcel(buffer: Buffer): {
+  structuredData: Array<Record<string, unknown>>;
+  csvText: string;
+} {
   // eslint-disable-next-line @typescript-eslint/no-require-imports
   const XLSX = require("xlsx");
   const workbook = XLSX.read(buffer, { type: "buffer" });
@@ -97,4 +101,3 @@ export function detectDocumentType(filename: string): string {
     return "transaction_log";
   return "unknown";
 }
-

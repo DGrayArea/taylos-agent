@@ -1,0 +1,21 @@
+Invoice_ID,Vendor_Name,Invoice_Date,Due_Date,Amount_NGN,Status,PO_Reference,Approved_By
+INV-2025-001,Interswitch Nigeria Ltd,03/01/2025,17/01/2025,480000.00,Paid,PO-2025-0041,Chukwuemeka Eze
+INV-2025-002,Oracle Nigeria Ltd,05/01/2025,19/01/2025,1250000.00,Paid,PO-2025-0042,Ngozi Adeyemi
+INV-2025-003,Stallion Group - Office Supplies,07/01/2025,21/01/2025,185000.00,Paid,PO-2025-0043,Bola Tinubu-James
+INV-2025-004,Mobi Systems IT Services,09/01/2025,23/01/2025,620000.00,Paid,PO-2025-0044,Chukwuemeka Eze
+INV-2025-005,Lagos Cleaning Services Ltd,10/01/2025,24/01/2025,95000.00,Paid,PO-2025-0045,Funmilayo Okafor
+INV-2025-006,Delta Power & Energy,14/01/2025,28/01/2025,340000.00,Paid,PO-2025-0046,Ngozi Adeyemi
+INV-2025-007,TechAdvance Solutions,17/01/2025,31/01/2025,875000.00,Paid,PO-2025-0047,Chukwuemeka Eze
+INV-2025-008,Coscharis Motors - Fleet Maintenance,21/01/2025,04/02/2025,420000.00,Paid,PO-2025-0048,Bola Tinubu-James
+INV-2025-009,PrintRight Nigeria,22/01/2025,05/02/2025,67000.00,Paid,PO-2025-0049,Funmilayo Okafor
+INV-2025-010,Alpha Catering Services,24/01/2025,07/02/2025,210000.00,Paid,,Ngozi Adeyemi
+INV-2025-011,Greensweep Facility Management,28/01/2025,11/02/2025,130000.00,Paid,PO-2025-0050,Funmilayo Okafor
+INV-2025-012,Mobi Systems IT Services,04/02/2025,18/02/2025,620000.00,Paid,PO-2025-0051,Chukwuemeka Eze
+INV-2025-013,Afrinvest Securities Ltd,07/02/2025,21/02/2025,550000.00,Paid,PO-2025-0052,Ngozi Adeyemi
+INV-2025-014,Lagos State Water Corporation,10/02/2025,24/02/2025,48000.00,Paid,PO-2025-0053,Funmilayo Okafor
+INV-2025-015,TechAdvance Solutions,12/02/2025,26/02/2025,375000.00,Paid,PO-2025-0054,Chukwuemeka Eze
+INV-2025-016,Zion Global Consulting Ltd,14/02/2025,28/02/2025,980000.00,Paid,,
+INV-2025-017,Zenith Stationery Supplies,18/02/2025,04/03/2025,92500.00,Paid,PO-2025-0055,Bola Tinubu-James
+INV-2025-018,Coscharis Motors - Fleet Maintenance,22/02/2025,08/03/2025,420000.00,Paid,PO-2025-0056,Bola Tinubu-James
+INV-2025-019,Oracle Nigeria Ltd,25/02/2025,11/03/2025,310000.00,Pending,PO-2025-0057,Ngozi Adeyemi
+INV-2025-020,Delta Power & Energy,28/02/2025,14/03/2025,265000.00,Paid,PO-2025-0058,Ngozi Adeyemi

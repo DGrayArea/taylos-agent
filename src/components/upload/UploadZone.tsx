@@ -198,19 +198,19 @@ export function UploadZone() {
           {/* Text */}
           <h3 className="text-xl font-bold mb-2">
             {isProcessing
-              ? "Processing files..."
+              ? "Reviewing your documents..."
               : success
-                ? "Analysis complete!"
+                ? "Review complete!"
                 : isDragOver
                   ? "Drop your files here"
                   : "Drag files here or click to browse"}
           </h3>
           <p className="text-gray-400 text-sm mb-6 max-w-md">
             {isProcessing
-              ? "Uploading, extracting, and running anomaly detection..."
+              ? "Reading your documents and checking for errors, duplicates, and irregularities — this may take a moment."
               : success
-                ? `${files.length} file${files.length > 1 ? "s" : ""} analysed — view the full report below.`
-                : "Bank statements, invoices, complaints, or transaction logs. PDF, CSV, Excel, JSON accepted."}
+                ? `${files.length} document${files.length > 1 ? "s" : ""} reviewed — your results are shown below.`
+                : "Accepted formats: bank statements, invoices, transaction logs, and schedules. PDF, CSV, Excel, or JSON."}
           </p>
 
           {/* Format badges */}

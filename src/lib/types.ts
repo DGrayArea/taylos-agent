@@ -24,6 +24,7 @@ export interface UnifiedInvoice {
   vendor: string;
   due_date: string; // YYYY-MM-DD
   status: "paid" | "unpaid" | "pending";
+  source_document?: string;
 }
 
 export interface UnifiedComplaint {
@@ -31,6 +32,7 @@ export interface UnifiedComplaint {
   date_filed: string; // YYYY-MM-DD
   sentiment: string;
   mentions: string[];
+  source_document?: string;
 }
 
 export interface DataQualityMetrics {
@@ -75,7 +77,17 @@ export interface RawDocumentPayload {
   content_type: string;
   raw_text: string;
   // Fallback for structured data files like CSV/JSON
-  structured_data?: any[];
+  structured_data?: Array<Record<string, unknown>>;
+}
+
+export interface ReportHistoryRow {
+  id: string;
+  created_at: string;
+  date: string;
+  documents: number;
+  issues: number;
+  status: string;
+  data: ComprehensiveAnalysis;
 }
 
 // -----------------------------------------------------------------------------
@@ -102,6 +114,11 @@ export interface Anomaly {
   evidence_points: string[];
   first_occurrence?: string;
   related_documents: string[];
+  // Extra AI-generated fields
+  recommended_action?: string;
+  financial_impact?: string;
+  system_detected?: boolean;
+  business_impact?: string;
 }
 
 export interface AnomalySummary {
@@ -196,6 +213,14 @@ export interface ComprehensiveAnalysis {
     documents_processed: number;
     total_transactions_analyzed: number;
   };
+  // Chart / visualisation data
+  spending_by_category?: Record<string, number>;
+  monthly_trend?: Array<{
+    month: string;
+    total_debits: number;
+    total_credits: number;
+    anomaly_count: number;
+  }>;
   feature_1_data_intake: MasterUnifiedModel;
   feature_2_anomalies: {
     total_anomalies_found: number;
@@ -225,4 +250,5 @@ export interface ComprehensiveAnalysis {
     priority: SeverityLevel;
     next_steps: string;
   };
+  source_documents?: string[];
 }

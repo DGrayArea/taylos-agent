@@ -18,9 +18,9 @@ export function FloatingCard({ children, className, delay = 0, hoverEffect = tru
       transition={{ duration: 0.5, delay, ease: "easeOut" }}
       whileHover={hoverEffect ? { y: -5, transition: { duration: 0.2 } } : {}}
       className={cn(
-        "bg-[var(--color-card)] border border-white/5 rounded-2xl p-6",
-        "shadow-[var(--shadow-level-1)] transition-shadow duration-300",
-        hoverEffect && "hover:shadow-[var(--shadow-level-2)] hover:border-white/10",
+        "bg-[var(--color-navy)]/60 backdrop-blur-xl border border-white/10 rounded-2xl p-6",
+        "shadow-[0_8px_30px_rgb(0,0,0,0.12)] transition-all duration-500",
+        hoverEffect && "hover:shadow-[0_8px_30px_rgba(212,175,55,0.15)] hover:border-[var(--color-gold)]/40 hover:bg-[var(--color-navy)]/80",
         className
       )}
       {...props}

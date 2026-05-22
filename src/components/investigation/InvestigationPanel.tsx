@@ -6,11 +6,11 @@ import { Badge } from "../ui/Badge";
 import { Button } from "../ui/Button";
 import {
   Shield,
-  BrainCircuit,
+  BookOpen,
   Activity,
-  LineChart,
+  TrendingDown,
   FileText,
-  Target,
+  CheckCircle2,
 } from "lucide-react";
 import { Anomaly, Investigation } from "@/lib/types";
 import { formatNaira } from "@/lib/utils";
@@ -18,19 +18,34 @@ import React from "react";
 
 interface Props {
   anomaly: Anomaly;
-  investigation?: Investigation; // Optional real investigation data
+  investigation?: Investigation;
 }
 
+// Human-readable classification labels
+const classificationLabels: Record<string, string> = {
+  FRAUD: "Possible Fraud",
+  BILLING_ERROR: "Billing Error",
+  CUSTOMER_ERROR: "Data Entry Error",
+  SYSTEM_GLITCH: "System / Processing Delay",
+  LEGITIMATE_ACTIVITY: "Legitimate — No Action Needed",
+  UNCATEGORIZED: "Under Review",
+};
+
 export function InvestigationPanel({ anomaly, investigation }: Props) {
-  // Use real investigation data if available, otherwise fall back to mock-like behavior
   const summary =
     investigation?.step_1_what_happened.summary ||
-    "Anomaly detected in transaction flow. Root cause investigation recommended.";
+    "An irregularity was identified in your uploaded document. Please review the highlighted entry and confirm whether it is correct.";
+
   const diagnosis =
     investigation?.step_2_root_cause.primary_hypothesis ||
-    "Potential data inconsistency or billing conflict.";
-  const classification =
+    "The most likely cause is a data entry or processing issue. Further review is recommended.";
+
+  const rawClassification =
     investigation?.step_3_classification.primary_category || "UNCATEGORIZED";
+
+  const classification =
+    classificationLabels[rawClassification] ?? rawClassification;
+
   const confidence =
     investigation?.step_6_confidence.overall_confidence_percentage ||
     anomaly.confidence ||
@@ -41,6 +56,16 @@ export function InvestigationPanel({ anomaly, investigation }: Props) {
     anomaly.evidence_points ||
     [];
 
+  const financialImpact =
+    investigation?.step_5_impact_assessment.financial_impact ||
+    (anomaly.affected_amounts?.[0]
+      ? formatNaira(anomaly.affected_amounts[0])
+      : "To be determined");
+
+  const businessImpact =
+    investigation?.step_5_impact_assessment.customer_impact ||
+    "Assessing potential impact on accounts and records.";
+
   return (
     <motion.div
       initial={{ opacity: 0, height: 0 }}
@@ -48,14 +73,14 @@ export function InvestigationPanel({ anomaly, investigation }: Props) {
       exit={{ opacity: 0, height: 0 }}
       className="mt-6 border-t border-white/5 pt-6 grid grid-cols-1 lg:grid-cols-3 gap-6"
     >
-      {/* Column 1: What & Why */}
+      {/* Column 1: What was found & likely cause */}
       <div className="flex flex-col gap-4">
         <FloatingCard
           hoverEffect={false}
           className="bg-white/[0.02] border-white/5 p-5"
         >
           <div className="flex items-center gap-2 mb-3 text-[var(--color-gold-light)] font-medium text-sm">
-            <Activity className="w-4 h-4" /> WHAT HAPPENED?
+            <Activity className="w-4 h-4" /> What Was Found
           </div>
           <p className="text-gray-300 text-sm leading-relaxed">{summary}</p>
         </FloatingCard>
@@ -65,10 +90,10 @@ export function InvestigationPanel({ anomaly, investigation }: Props) {
           className="bg-white/[0.02] border-[var(--color-gold)]/20 p-5 relative overflow-hidden"
         >
           <div className="absolute top-0 right-0 p-4 opacity-10">
-            <BrainCircuit className="w-24 h-24 text-[var(--color-gold)]" />
+            <BookOpen className="w-24 h-24 text-[var(--color-gold)]" />
           </div>
           <div className="flex items-center gap-2 mb-3 text-[var(--color-gold)] font-medium text-sm relative z-10">
-            <Target className="w-4 h-4" /> ROOT CAUSE DIAGNOSIS
+            <TrendingDown className="w-4 h-4" /> Likely Cause
           </div>
           <p className="text-white text-sm leading-relaxed relative z-10">
             {diagnosis}
@@ -77,7 +102,7 @@ export function InvestigationPanel({ anomaly, investigation }: Props) {
 
         <div className="mt-2">
           <div className="text-xs text-gray-500 mb-2 uppercase tracking-wider">
-            System Classification
+            Issue Type
           </div>
           <Badge
             variant={anomaly.severity as any}
@@ -88,10 +113,10 @@ export function InvestigationPanel({ anomaly, investigation }: Props) {
         </div>
       </div>
 
-      {/* Column 2: Evidence Chain */}
+      {/* Column 2: Supporting Evidence */}
       <div className="flex flex-col gap-4">
         <div className="text-sm font-medium text-gray-400 mb-1 flex items-center gap-2">
-          <Shield className="w-4 h-4" /> EVIDENCE CHAIN
+          <Shield className="w-4 h-4" /> Supporting Evidence
         </div>
         <div className="relative pl-4 border-l-2 border-white/10 space-y-4">
           {evidencePoints.map((ev, i) => (
@@ -104,29 +129,26 @@ export function InvestigationPanel({ anomaly, investigation }: Props) {
             >
               <div className="absolute -left-[21px] top-1.5 w-2 h-2 rounded-full bg-[var(--color-gold)] shadow-[var(--shadow-glow)]" />
               <FloatingCard hoverEffect={false} className="p-3 bg-white/[0.02]">
-                <div className="text-xs text-gray-400 mb-1">Point {i + 1}</div>
+                <div className="text-xs text-gray-400 mb-1">Evidence {i + 1}</div>
                 <div className="text-sm text-gray-200">{ev}</div>
               </FloatingCard>
             </motion.div>
           ))}
           {evidencePoints.length === 0 && (
             <p className="text-xs text-gray-500 italic">
-              No specific evidence points recorded yet.
+              No additional evidence has been recorded for this issue.
             </p>
           )}
         </div>
       </div>
 
-      {/* Column 3: Impact & Action */}
+      {/* Column 3: Financial Impact & Actions */}
       <div className="flex flex-col gap-4">
         <div className="grid grid-cols-2 gap-3">
           <div className="bg-white/5 rounded-xl p-4 border border-white/5">
-            <div className="text-xs text-gray-400 mb-1">Financial Impact</div>
+            <div className="text-xs text-gray-400 mb-1">Amount at Risk</div>
             <div className="text-lg font-bold text-[var(--color-critical)]">
-              {investigation?.step_5_impact_assessment.financial_impact ||
-                (anomaly.affected_amounts?.[0]
-                  ? formatNaira(anomaly.affected_amounts[0])
-                  : "TBD")}
+              {financialImpact}
             </div>
           </div>
           <div className="bg-white/5 rounded-xl p-4 border border-white/5 flex flex-col items-center justify-center relative overflow-hidden group">
@@ -158,32 +180,22 @@ export function InvestigationPanel({ anomaly, investigation }: Props) {
             </div>
           </div>
           <div className="col-span-2 bg-white/5 rounded-xl p-4 border border-white/5">
-            <div className="text-xs text-gray-400 mb-1">
-              Customer / System Impact
-            </div>
-            <div className="text-sm text-gray-200">
-              {investigation?.step_5_impact_assessment.customer_impact ||
-                "Reviewing potential friction."}
-            </div>
+            <div className="text-xs text-gray-400 mb-1">Business Impact</div>
+            <div className="text-sm text-gray-200">{businessImpact}</div>
           </div>
         </div>
 
         <div className="mt-auto pt-4 flex flex-col gap-3">
-          <div className="text-xs text-gray-400 text-center">
-            RECOMMENDED ACTION
+          <div className="text-xs text-gray-400 text-center uppercase tracking-wider">
+            Recommended Action
           </div>
           <Button variant="primary" className="w-full py-3 text-base">
-            {investigation ? "Approve Resolution" : "Run Deep Investigation"}
+            <CheckCircle2 className="w-4 h-4 mr-2" />
+            {investigation ? "Mark as Resolved" : "Review This Issue"}
           </Button>
           <div className="flex gap-2">
             <Button variant="secondary" className="flex-1 text-xs py-2">
-              <FileText className="w-3.5 h-3.5 mr-2" /> Export Report
-            </Button>
-            <Button
-              variant="ghost"
-              className="flex-1 text-xs py-2 border border-white/10"
-            >
-              <LineChart className="w-3.5 h-3.5 mr-2" /> View Timeline
+              <FileText className="w-3.5 h-3.5 mr-2" /> Download Report
             </Button>
           </div>
         </div>

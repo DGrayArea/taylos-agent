@@ -1,81 +1,159 @@
-"use client";
-
-import { motion } from "framer-motion";
-import { UploadZone } from "@/components/upload/UploadZone";
-import { UploadProgress } from "@/components/upload/UploadProgress";
-import { DataIntakeSummary } from "@/components/upload/DataIntakeSummary";
+import { createClient } from "@/lib/supabase/server";
 import { AnomalyOverview } from "@/components/anomalies/AnomalyOverview";
 import { AnomalyList } from "@/components/anomalies/AnomalyList";
-import { FloatingCard } from "@/components/ui/FloatingCard";
-import { Button } from "@/components/ui/Button";
-import { DownloadCloud, Mail, FileJson } from "lucide-react";
+import { DashboardWelcome } from "@/components/upload/DashboardWelcome";
+import { AnalysisChartsPanel } from "@/components/charts/AnalysisCharts";
+import { DocumentChat } from "@/components/chat/DocumentChat";
+import { ExportExcelButton } from "@/components/upload/ExportExcelButton";
+import Link from "next/link";
+import { FileDown, Table } from "lucide-react";
 
-export default function Dashboard() {
+export const metadata = {
+  title: "Dashboard | Taylos Finance",
+  description: "Review your latest financial document analysis and findings.",
+};
+
+export default async function Dashboard() {
+  const supabase = await createClient();
+
+  // Fetch the most recent completed report
+  const { data: latestReport } = await supabase
+    .from("reports")
+    .select("*")
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  // Fetch quick stats: total reports + total issues
+  const { data: allReports } = await supabase
+    .from("reports")
+    .select("id, issues, documents")
+    .order("created_at", { ascending: false })
+    .limit(100);
+
+  const hasData = !!latestReport;
+
+  const anomalyStats = hasData
+    ? {
+        critical:
+          latestReport.data?.feature_2_anomalies?.anomalies_by_severity?.critical ?? 0,
+        high:
+          latestReport.data?.feature_2_anomalies?.anomalies_by_severity?.high ?? 0,
+        medium:
+          latestReport.data?.feature_2_anomalies?.anomalies_by_severity?.medium ?? 0,
+        low:
+          latestReport.data?.feature_2_anomalies?.anomalies_by_severity?.low ?? 0,
+        totalRecords:
+          latestReport.data?.analysis_metadata?.total_transactions_analyzed ?? 0,
+        documentCount: latestReport.documents ?? 0,
+        reportDate: latestReport.created_at,
+      }
+    : null;
+
+  const anomalyList = hasData
+    ? (latestReport.data?.feature_2_anomalies?.anomaly_list ?? [])
+    : [];
+
+  const totalReports = allReports?.length ?? 0;
+  const totalIssues = allReports?.reduce((s, r) => s + (r.issues ?? 0), 0) ?? 0;
+  const totalDocs = allReports?.reduce((s, r) => s + (r.documents ?? 0), 0) ?? 0;
+
+  const spendingByCategory = latestReport?.data?.spending_by_category;
+  const monthlyTrend = latestReport?.data?.monthly_trend;
+
   return (
-    <div className="p-4 md:p-8 max-w-7xl mx-auto space-y-10 md:space-y-16 pb-24 overflow-x-hidden">
-      {/* Header Section */}
-      <motion.div 
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-        className="flex flex-col md:flex-row items-start md:items-end justify-between gap-4"
-      >
+    <div className="p-4 md:p-8 max-w-7xl mx-auto space-y-10 md:space-y-14 pb-24 overflow-x-hidden">
+      {/* Page Header */}
+      <div className="flex flex-col md:flex-row items-start md:items-end justify-between gap-4">
         <div>
-          <h1 className="text-3xl md:text-4xl font-bold mb-2">Financial Intelligence</h1>
-          <p className="text-gray-400 text-sm md:text-base">Automated multi-source extraction & anomaly detection</p>
+          <h1 className="text-3xl md:text-4xl font-bold mb-2">
+            Financial Review Dashboard
+          </h1>
+          <p className="text-gray-400 text-sm md:text-base">
+            {hasData
+              ? `Showing results from your most recent review — ${new Date(
+                  latestReport.created_at,
+                ).toLocaleDateString("en-GB", {
+                  day: "numeric",
+                  month: "long",
+                  year: "numeric",
+                })}`
+              : "Upload financial documents to check for errors, duplicates, and irregularities."}
+          </p>
         </div>
-        <Button variant="primary" className="shadow-[var(--shadow-glow)] w-full md:w-auto">
-          <DownloadCloud className="w-4 h-4 mr-2" /> Export Unified Report
-        </Button>
-      </motion.div>
+        {hasData && (
+          <div className="flex gap-3 flex-wrap">
+            <Link
+              href="/monitor"
+              className="px-4 py-2 rounded-xl border border-white/10 text-gray-300 hover:text-white hover:border-white/30 text-sm transition-colors"
+            >
+              View All Reports
+            </Link>
+            <Link
+              href={`/api/report/pdf?id=${latestReport.id}`}
+              className="px-4 py-2 rounded-xl bg-[var(--color-gold)] text-[var(--color-navy)] font-semibold text-sm hover:opacity-90 transition-opacity flex items-center gap-2"
+            >
+              <FileDown className="w-4 h-4" />
+              Export PDF
+            </Link>
+            <ExportExcelButton analysis={latestReport.data} />
+          </div>
+        )}
+      </div>
 
-      {/* Feature 2 & 3: Anomalies & Investigation */}
-      <section className="relative">
-        {/* Background glow effect for critical section */}
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[400px] bg-[var(--color-critical)]/5 rounded-full blur-[120px] pointer-events-none" />
-        
-        <div className="flex items-center mb-8 relative z-10">
-          <h2 className="text-2xl font-bold">Intelligent Diagnosis</h2>
+      {/* All-time stats row — only when there is data */}
+      {hasData && totalReports > 0 && (
+        <div className="grid grid-cols-3 gap-4">
+          {[
+            { label: "Total Reviews", value: totalReports },
+            { label: "Documents Analysed", value: totalDocs },
+            { label: "Total Issues Found", value: totalIssues, red: totalIssues > 0 },
+          ].map((stat, i) => (
+            <div
+              key={i}
+              className="rounded-2xl bg-white/5 border border-white/10 p-5"
+            >
+              <div className="text-xs text-gray-500 uppercase tracking-wider mb-1">{stat.label}</div>
+              <div className={`text-2xl font-bold ${stat.red ? "text-[var(--color-critical)]" : "text-white"}`}>
+                {stat.value}
+              </div>
+            </div>
+          ))}
         </div>
+      )}
 
-        <AnomalyOverview />
-        <AnomalyList />
-      </section>
+      {/* No data yet — show welcome/onboarding */}
+      {!hasData && <DashboardWelcome />}
 
-      {/* Feature 4: Results & Recommendations */}
-      <section>
-        <div className="flex items-center mb-6">
-          <h2 className="text-2xl font-bold">Synthesis & Export</h2>
-        </div>
+      {/* Issues Found in Your Documents */}
+      {hasData && (
+        <section className="relative space-y-8">
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[400px] bg-[var(--color-critical)]/5 rounded-full blur-[120px] pointer-events-none" />
 
-        <FloatingCard className="bg-gradient-to-br from-white/[0.03] to-transparent border-white/10 p-8 flex flex-col md:flex-row items-center justify-between gap-8">
-          <div className="max-w-xl">
-            <h3 className="text-xl font-bold mb-3 text-[var(--color-gold-light)]">Analysis Complete</h3>
-            <p className="text-gray-300 text-sm leading-relaxed mb-6">
-              Processed 3 documents containing 2,569 records. Identified <span className="text-[var(--color-critical)] font-bold">1 critical fraud</span> incident and <span className="text-[var(--color-warning)] font-bold">1 high priority</span> anomaly. All findings have been cross-verified with 95%+ confidence.
+          <div className="relative z-10">
+            <h2 className="text-2xl font-bold mb-1">Issues Found in Your Documents</h2>
+            <p className="text-gray-400 text-sm">
+              From your most recent review — {new Date(latestReport.created_at).toLocaleString("en-GB", { day: "numeric", month: "long", year: "numeric", hour: "2-digit", minute: "2-digit" })}
             </p>
-            <div className="flex gap-4">
-              <Button variant="primary">Download PDF Report</Button>
-              <Button variant="secondary">
-                <FileJson className="w-4 h-4 mr-2" /> Export JSON
-              </Button>
-              <Button variant="secondary">
-                <Mail className="w-4 h-4 mr-2" /> Email Summary
-              </Button>
-            </div>
           </div>
-          
-          {/* Decorative graphic */}
-          <div className="relative w-48 h-48 flex-shrink-0 hidden md:block">
-            <div className="absolute inset-0 border-[4px] border-[var(--color-gold)]/20 rounded-full animate-[spin_10s_linear_infinite]" />
-            <div className="absolute inset-4 border-[2px] border-[var(--color-gold-light)]/40 rounded-full animate-[spin_15s_linear_infinite_reverse]" />
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="w-24 h-24 bg-[var(--color-gold)]/10 rounded-full blur-xl animate-pulse" />
-              <DownloadCloud className="w-12 h-12 text-[var(--color-gold)] absolute" />
-            </div>
+
+          <AnomalyOverview stats={anomalyStats} />
+
+          {/* Charts */}
+          <AnalysisChartsPanel
+            anomaliesBySeverity={anomalyStats ?? undefined}
+            spendingByCategory={spendingByCategory}
+            monthlyTrend={monthlyTrend}
+          />
+
+          <AnomalyList anomalies={anomalyList} />
+
+          {/* Chat with Document */}
+          <div className="mt-8">
+            <DocumentChat analysisContext={latestReport.data} />
           </div>
-        </FloatingCard>
-      </section>
+        </section>
+      )}
     </div>
   );
 }
