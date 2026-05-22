@@ -7,6 +7,7 @@ import { mockAnomalies } from "@/lib/mockData";
 import { ChevronDown, ChevronUp, AlertCircle } from "lucide-react";
 import { InvestigationPanel } from "../investigation/InvestigationPanel";
 import { AnimatePresence } from "framer-motion";
+import { formatNaira } from "@/lib/utils";
 
 import { Anomaly } from "@/lib/types";
 
@@ -14,8 +15,12 @@ interface AnomalyListProps {
   anomalies?: Anomaly[];
 }
 
-export function AnomalyList({ anomalies = mockAnomalies as any }: AnomalyListProps) {
-  const [expandedId, setExpandedId] = useState<string | null>(anomalies[0]?.id || null);
+export function AnomalyList({
+  anomalies = mockAnomalies as any,
+}: AnomalyListProps) {
+  const [expandedId, setExpandedId] = useState<string | null>(
+    anomalies[0]?.id || null,
+  );
 
   return (
     <div className="space-y-4">
@@ -23,8 +28,8 @@ export function AnomalyList({ anomalies = mockAnomalies as any }: AnomalyListPro
         const isExpanded = expandedId === anomaly.id;
 
         return (
-          <FloatingCard 
-            key={anomaly.id} 
+          <FloatingCard
+            key={anomaly.id}
             delay={0.3 + i * 0.1}
             className="p-0 overflow-hidden cursor-pointer group"
             onClick={() => setExpandedId(isExpanded ? null : anomaly.id)}
@@ -39,17 +44,23 @@ export function AnomalyList({ anomalies = mockAnomalies as any }: AnomalyListPro
                   <div className="text-base font-bold text-white mb-1 group-hover:text-[var(--color-gold-light)] transition-colors">
                     {anomaly.type}
                   </div>
-                  <div className="text-xs text-gray-400">{anomaly.description}</div>
+                  <div className="text-xs text-gray-400">
+                    {anomaly.description}
+                  </div>
+                  {anomaly.related_documents?.length ? (
+                    <div className="text-[11px] text-[var(--color-gold-light)] mt-1">
+                      Document: {anomaly.related_documents.join(", ")}
+                    </div>
+                  ) : null}
                 </div>
               </div>
 
               <div className="flex items-center gap-8 w-1/2 justify-end">
                 <div className="text-right hidden md:block">
                   <div className="text-sm font-medium text-white mb-1">
-                    {anomaly.affected_amounts && anomaly.affected_amounts.length > 0
-                      ? `$${anomaly.affected_amounts[0].toLocaleString(undefined, {
-                          minimumFractionDigits: 2,
-                        })}`
+                    {anomaly.affected_amounts &&
+                    anomaly.affected_amounts.length > 0
+                      ? formatNaira(anomaly.affected_amounts[0])
                       : "N/A"}
                   </div>
                   <div className="text-xs text-gray-500">
@@ -68,11 +79,17 @@ export function AnomalyList({ anomalies = mockAnomalies as any }: AnomalyListPro
                   <div className="text-sm font-bold text-white">
                     {anomaly.anomaly_score}
                   </div>
-                  <div className="text-[10px] text-gray-500 uppercase">Score</div>
+                  <div className="text-[10px] text-gray-500 uppercase">
+                    Score
+                  </div>
                 </div>
 
                 <div className="text-gray-500">
-                  {isExpanded ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
+                  {isExpanded ? (
+                    <ChevronUp className="w-5 h-5" />
+                  ) : (
+                    <ChevronDown className="w-5 h-5" />
+                  )}
                 </div>
               </div>
             </div>
@@ -80,7 +97,10 @@ export function AnomalyList({ anomalies = mockAnomalies as any }: AnomalyListPro
             {/* Expandable Details */}
             <AnimatePresence>
               {isExpanded && (
-                <div className="px-5 pb-5 cursor-default" onClick={(e) => e.stopPropagation()}>
+                <div
+                  className="px-5 pb-5 cursor-default"
+                  onClick={(e) => e.stopPropagation()}
+                >
                   <InvestigationPanel anomaly={anomaly} />
                 </div>
               )}

@@ -46,7 +46,10 @@ Respond ONLY in this JSON format:
 // PROMPT 2: Document Parsing / Extraction
 // Used by: POST /api/upload (after raw text is extracted)
 // ─────────────────────────────────────────────────────────────
-export function buildExtractionPrompt(rawText: string, docType: string): string {
+export function buildExtractionPrompt(
+  rawText: string,
+  docType: string,
+): string {
   return `
 You are a financial document parser.
 
@@ -68,16 +71,21 @@ Respond ONLY as a JSON array:
 // PROMPT 3: Executive Summary
 // Used by: POST /api/analyze (final step)
 // ─────────────────────────────────────────────────────────────
-export function buildSummaryPrompt(anomalyCount: number, totalAmount: number, criticalCount: number): string {
+export function buildSummaryPrompt(
+  anomalyCount: number,
+  totalAmount: number,
+  criticalCount: number,
+): string {
   return `
-You are a financial intelligence agent writing an executive summary.
+You are a financial intelligence agent writing an executive summary for a non-technical business user.
 
 Analysis results:
 - Total anomalies detected: ${anomalyCount}
 - Critical issues: ${criticalCount}
-- Total affected amount: $${totalAmount.toFixed(2)}
+- Total affected amount: ₦${totalAmount.toFixed(2)}
 
-Write a 2-3 sentence professional executive summary of these findings.
+Write a 2-3 sentence summary that is clear to a layperson.
+Mention relevant document names and row/column locations if available, and use Naira currency formatting.
 Be direct and action-oriented. Respond with plain text only, no JSON.
 `.trim();
 }

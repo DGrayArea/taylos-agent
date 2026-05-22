@@ -6,6 +6,7 @@ import { FloatingCard } from "../ui/FloatingCard";
 import React, { useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 import { useUpload } from "./UploadContext";
+import type { ComprehensiveAnalysis } from "@/lib/types";
 import { saveReportToHistory } from "@/app/actions/reports";
 
 const ACCEPTED_MIME = [
@@ -13,6 +14,8 @@ const ACCEPTED_MIME = [
   "text/csv",
   "application/json",
   "text/plain",
+  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+  "application/vnd.ms-excel",
 ];
 
 const formatBytes = (bytes: number) => {
@@ -24,7 +27,7 @@ const formatBytes = (bytes: number) => {
 export function UploadZone() {
   const [isDragOver, setIsDragOver] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
-  const { files, setFiles, updateFile } = useUpload();
+  const { files, setFiles, updateFile, addAnalysis } = useUpload();
 
   const isProcessing = files.some(
     (f) => f.status === "uploading" || f.status === "processing",
@@ -39,11 +42,12 @@ export function UploadZone() {
         f.name.endsWith(".csv") ||
         f.name.endsWith(".json") ||
         f.name.endsWith(".txt") ||
-        f.name.endsWith(".pdf"),
+        f.name.endsWith(".pdf") ||
+        f.name.endsWith(".xlsx") ||
+        f.name.endsWith(".xls"),
     );
     if (valid.length === 0) return;
 
-    // Register all files immediately so progress cards appear at once
     const entries = valid.map((f) => ({
       id: `${f.name}-${Date.now()}-${Math.random()}`,
       name: f.name,
@@ -53,46 +57,47 @@ export function UploadZone() {
     }));
     setFiles((prev) => [...prev, ...entries]);
 
-    for (let i = 0; i < valid.length; i++) {
-      const file = valid[i];
-      const entry = entries[i];
+    try {
+      entries.forEach((entry) =>
+        updateFile(entry.id, { progress: 20, status: "uploading" }),
+      );
 
-      try {
-        updateFile(entry.id, { progress: 30 });
+      const formData = new FormData();
+      valid.forEach((file) => formData.append("files", file));
 
-        const formData = new FormData();
-        formData.append("files", file);
+      const uploadRes = await fetch("/api/upload", {
+        method: "POST",
+        body: formData,
+      });
 
-        const uploadRes = await fetch("/api/upload", {
-          method: "POST",
-          body: formData,
-        });
+      if (!uploadRes.ok) throw new Error("Upload failed");
+      const { payloads } = await uploadRes.json();
 
-        updateFile(entry.id, { progress: 60, status: "processing" });
+      entries.forEach((entry) =>
+        updateFile(entry.id, { progress: 50, status: "processing" }),
+      );
 
-        if (!uploadRes.ok) throw new Error("Upload failed");
-        const { payloads } = await uploadRes.json();
+      const analyzeRes = await fetch("/api/analyze", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ payloads }),
+      });
 
-        updateFile(entry.id, { progress: 80 });
+      if (!analyzeRes.ok) throw new Error("Analysis failed");
+      const analysis: ComprehensiveAnalysis = await analyzeRes.json();
+      console.log("[Taylos Agent] Batch analysis:", analysis);
 
-        const analyzeRes = await fetch("/api/analyze", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ payloads }),
-        });
+      await saveReportToHistory(analysis);
+      addAnalysis(analysis);
 
-        if (!analyzeRes.ok) throw new Error("Analysis failed");
-        const analysis = await analyzeRes.json();
-        console.log(`[Taylos Agent] ${file.name}:`, analysis);
-
-        // 4. Save to History (Supabase)
-        await saveReportToHistory(analysis);
-
-        updateFile(entry.id, { progress: 100, status: "complete" });
-      } catch (err) {
-        console.error(`Failed: ${file.name}`, err);
-        updateFile(entry.id, { progress: 0, status: "error" });
-      }
+      entries.forEach((entry) =>
+        updateFile(entry.id, { progress: 100, status: "complete" }),
+      );
+    } catch (err) {
+      console.error("Batch analysis failed", err);
+      entries.forEach((entry) =>
+        updateFile(entry.id, { progress: 0, status: "error" }),
+      );
     }
   };
 
@@ -137,7 +142,7 @@ export function UploadZone() {
         ref={inputRef}
         type="file"
         multiple
-        accept=".pdf,.csv,.json,.txt"
+        accept=".pdf,.csv,.json,.txt,.xlsx,.xls"
         className="hidden"
         onChange={handleFileInput}
       />
@@ -204,14 +209,14 @@ export function UploadZone() {
             {isProcessing
               ? "Uploading, extracting, and running anomaly detection..."
               : success
-                ? `${files.length} file${files.length > 1 ? "s" : ""} analysed — check console for the full report.`
-                : "Bank statements, invoices, complaints, or transaction logs. PDF, CSV, JSON accepted."}
+                ? `${files.length} file${files.length > 1 ? "s" : ""} analysed — view the full report below.`
+                : "Bank statements, invoices, complaints, or transaction logs. PDF, CSV, Excel, JSON accepted."}
           </p>
 
           {/* Format badges */}
           {!isProcessing && !success && (
             <div className="flex gap-3 pointer-events-none">
-              {["PDF", "CSV", "JSON", "TXT"].map((fmt) => (
+              {["PDF", "CSV", "Excel", "JSON", "TXT"].map((fmt) => (
                 <div
                   key={fmt}
                   className="flex items-center gap-1.5 text-xs font-medium text-gray-500 bg-white/5 px-3 py-1.5 rounded-lg border border-white/5"

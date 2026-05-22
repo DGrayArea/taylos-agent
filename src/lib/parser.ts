@@ -52,6 +52,33 @@ export function parseCSV(buffer: Buffer): Record<string, string>[] {
   });
 }
 
+
+// ─────────────────────────────────────────────────────────────
+// Excel Text & Data Extraction
+// ─────────────────────────────────────────────────────────────
+
+/**
+ * Parses an Excel buffer (.xlsx, .xls) into structured rows and CSV-style text.
+ */
+export function parseExcel(buffer: Buffer): { structuredData: any[]; csvText: string } {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const XLSX = require("xlsx");
+  const workbook = XLSX.read(buffer, { type: "buffer" });
+  if (workbook.SheetNames.length === 0) {
+    return { structuredData: [], csvText: "" };
+  }
+  const sheetName = workbook.SheetNames[0];
+  const worksheet = workbook.Sheets[sheetName];
+
+  // Convert worksheet to an array of objects
+  const structuredData = XLSX.utils.sheet_to_json(worksheet, { defval: "" });
+
+  // Convert worksheet to a CSV formatted string to serve as raw_text
+  const csvText = XLSX.utils.sheet_to_csv(worksheet);
+
+  return { structuredData, csvText };
+}
+
 // ─────────────────────────────────────────────────────────────
 // Detect File Type
 // ─────────────────────────────────────────────────────────────
@@ -70,3 +97,4 @@ export function detectDocumentType(filename: string): string {
     return "transaction_log";
   return "unknown";
 }
+

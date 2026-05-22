@@ -8,9 +8,8 @@
 //   ↓ Returns the payloads (client then calls /api/analyze)
 
 import { NextResponse } from "next/server";
-import { parseCSV, detectDocumentType } from "@/lib/parser";
+import { parseCSV, detectDocumentType, parseExcel, extractTextFromPDF } from "@/lib/parser";
 import { RawDocumentPayload } from "@/lib/types";
-import { extractTextFromPDF } from "@/lib/parser";
 
 export async function POST(request: Request) {
   try {
@@ -34,7 +33,17 @@ export async function POST(request: Request) {
       let structured_data: any[] | undefined;
       let raw_text = "";
 
-      if (mimeType === "text/csv" || file.name.endsWith(".csv")) {
+      if (
+        mimeType === "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" ||
+        mimeType === "application/vnd.ms-excel" ||
+        file.name.endsWith(".xlsx") ||
+        file.name.endsWith(".xls")
+      ) {
+        // Excel: parse into structured rows and CSV text
+        const { structuredData, csvText } = parseExcel(buffer);
+        structured_data = structuredData;
+        raw_text = csvText;
+      } else if (mimeType === "text/csv" || file.name.endsWith(".csv")) {
         // CSV: parse into structured rows
         structured_data = parseCSV(buffer);
         raw_text = buffer.toString("utf-8");

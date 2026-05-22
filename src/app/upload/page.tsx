@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { UploadZone } from "@/components/upload/UploadZone";
 import { UploadProgress } from "@/components/upload/UploadProgress";
 import { DataIntakeSummary } from "@/components/upload/DataIntakeSummary";
+import { AnalysisReport } from "@/components/upload/AnalysisReport";
 import { UploadProvider } from "@/components/upload/UploadContext";
 
 export default function UploadPage() {
@@ -14,9 +15,12 @@ export default function UploadPage() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
       >
-        <h1 className="text-3xl md:text-4xl font-bold mb-2">Upload Documents</h1>
+        <h1 className="text-3xl md:text-4xl font-bold mb-2">
+          Upload Documents
+        </h1>
         <p className="text-gray-400 text-sm md:text-base">
-          Drag and drop your financial files for automated extraction and analysis.
+          Drag and drop your financial files for automated extraction and
+          analysis.
         </p>
       </motion.div>
 
@@ -25,6 +29,7 @@ export default function UploadPage() {
           <UploadZone />
           <UploadProgress />
           <DataIntakeSummary />
+          <AnalysisReport />
         </section>
       </UploadProvider>
     </div>
