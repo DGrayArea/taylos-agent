@@ -15,7 +15,7 @@ export function ExportExcelButton({ analysis }: { analysis: any }) {
     try {
       exportAnomaliesToExcel(
         analysis,
-        `Taylos-Anomalies-${new Date().toISOString().slice(0, 10)}.xlsx`
+        `Taylos-Anomalies-${new Date().toISOString().slice(0, 10)}.xlsx`,
       );
       setStatus("Exported successfully");
       setTimeout(() => setStatus(null), 3000);
@@ -35,9 +35,7 @@ export function ExportExcelButton({ analysis }: { analysis: any }) {
         <Table className="w-4 h-4" />
         Export Excel
       </button>
-      {status && (
-        <span className="text-sm text-gray-300/80">{status}</span>
-      )}
+      {status && <span className="text-sm text-gray-300/80">{status}</span>}
     </div>
   );
 }

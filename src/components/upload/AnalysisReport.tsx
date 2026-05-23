@@ -4,9 +4,20 @@ import { useState } from "react";
 import { FloatingCard } from "../ui/FloatingCard";
 import { Button } from "../ui/Button";
 import { Badge } from "../ui/Badge";
-import { ChevronDown, ChevronUp, Sparkles, FileDown, Loader2, FileText } from "lucide-react";
+import {
+  ChevronDown,
+  ChevronUp,
+  Sparkles,
+  FileDown,
+  Loader2,
+  FileText,
+} from "lucide-react";
 import { useUpload } from "./UploadContext";
-import { formatNaira, getDocumentNamesFromAnalysis, exportAnomaliesToExcel } from "@/lib/utils";
+import {
+  formatNaira,
+  getDocumentNamesFromAnalysis,
+  exportAnomaliesToExcel,
+} from "@/lib/utils";
 import { AnalysisChartsPanel } from "@/components/charts/AnalysisCharts";
 import { DocumentChat } from "@/components/chat/DocumentChat";
 import { Table } from "lucide-react";
@@ -41,7 +52,9 @@ function formatAnomalyType(type: string): string {
 }
 
 function downloadJSON(data: unknown, filename: string) {
-  const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+  const blob = new Blob([JSON.stringify(data, null, 2)], {
+    type: "application/json",
+  });
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;
@@ -68,7 +81,8 @@ export function AnalysisReport() {
   } = latestAnalysis;
 
   const documentNames = getDocumentNamesFromAnalysis(latestAnalysis);
-  const priorityLabel = priorityLabels[executive_summary.priority] ?? executive_summary.priority;
+  const priorityLabel =
+    priorityLabels[executive_summary.priority] ?? executive_summary.priority;
 
   // ── Export PDF via API ─────────────────────────────────
   const handleExportPDF = async () => {
@@ -104,7 +118,8 @@ export function AnalysisReport() {
         <div>
           <h2 className="text-2xl font-bold">Your Review Results</h2>
           <p className="text-gray-400 text-sm max-w-2xl">
-            This report has been saved. Use the buttons below to export a formatted PDF report or the raw data.
+            This report has been saved. Use the buttons below to export a
+            formatted PDF report or the raw data.
           </p>
         </div>
         <div className="flex items-center gap-3 flex-wrap">
@@ -157,8 +172,15 @@ export function AnalysisReport() {
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         {[
           { label: "Documents", value: analysis_metadata.documents_processed },
-          { label: "Records Checked", value: analysis_metadata.total_transactions_analyzed || "—" },
-          { label: "Issues Found", value: feature_2_anomalies.total_anomalies_found, highlight: feature_2_anomalies.total_anomalies_found > 0 },
+          {
+            label: "Records Checked",
+            value: analysis_metadata.total_transactions_analyzed || "—",
+          },
+          {
+            label: "Issues Found",
+            value: feature_2_anomalies.total_anomalies_found,
+            highlight: feature_2_anomalies.total_anomalies_found > 0,
+          },
           {
             label: "Data Quality",
             value: analysis_metadata.data_quality_score
@@ -168,7 +190,9 @@ export function AnalysisReport() {
         ].map((stat, i) => (
           <FloatingCard key={i} className="p-4">
             <div className="text-sm text-gray-400">{stat.label}</div>
-            <div className={`text-2xl font-bold mt-1 ${stat.highlight ? "text-[var(--color-critical)]" : ""}`}>
+            <div
+              className={`text-2xl font-bold mt-1 ${stat.highlight ? "text-[var(--color-critical)]" : ""}`}
+            >
               {stat.value}
             </div>
           </FloatingCard>
@@ -181,10 +205,15 @@ export function AnalysisReport() {
         <FloatingCard className="p-6 space-y-5">
           {documentNames.length > 0 && (
             <div className="p-4 rounded-2xl bg-white/5 border border-white/10">
-              <div className="text-sm text-gray-400 mb-2">Documents Reviewed</div>
+              <div className="text-sm text-gray-400 mb-2">
+                Documents Reviewed
+              </div>
               <div className="flex flex-wrap gap-2">
                 {documentNames.map((name) => (
-                  <span key={name} className="px-3 py-1 rounded-full bg-white/5 border border-white/10 text-sm text-white">
+                  <span
+                    key={name}
+                    className="px-3 py-1 rounded-full bg-white/5 border border-white/10 text-sm text-white"
+                  >
                     {name}
                   </span>
                 ))}
@@ -196,11 +225,21 @@ export function AnalysisReport() {
             {[
               { label: "Priority Level", value: priorityLabel, colored: true },
               { label: "Confidence", value: executive_summary.confidence },
-              { label: "Time to Complete", value: analysis_metadata.total_processing_time_seconds ? `${analysis_metadata.total_processing_time_seconds}s` : "—" },
+              {
+                label: "Time to Complete",
+                value: analysis_metadata.total_processing_time_seconds
+                  ? `${analysis_metadata.total_processing_time_seconds}s`
+                  : "—",
+              },
             ].map((item, i) => (
-              <div key={i} className="rounded-2xl bg-[var(--color-navy)]/80 p-4 border border-white/10">
+              <div
+                key={i}
+                className="rounded-2xl bg-[var(--color-navy)]/80 p-4 border border-white/10"
+              >
                 <div className="text-xs text-gray-400 mb-1">{item.label}</div>
-                <div className="font-semibold text-sm text-white">{item.value}</div>
+                <div className="font-semibold text-sm text-white">
+                  {item.value}
+                </div>
               </div>
             ))}
           </div>
@@ -212,15 +251,21 @@ export function AnalysisReport() {
             <Sparkles className="w-4 h-4" /> Summary
           </div>
           <div className="text-base font-bold">{executive_summary.finding}</div>
-          <p className="text-gray-300 text-sm leading-relaxed">{executive_summary.root_cause}</p>
+          <p className="text-gray-300 text-sm leading-relaxed">
+            {executive_summary.root_cause}
+          </p>
           <div>
-            <p className="text-xs text-gray-500 uppercase tracking-wider mb-2">What to do</p>
+            <p className="text-xs text-gray-500 uppercase tracking-wider mb-2">
+              What to do
+            </p>
             <div className="rounded-2xl bg-white/5 p-4 text-sm text-gray-200">
               {executive_summary.recommended_action}
             </div>
           </div>
           <div>
-            <p className="text-xs text-gray-500 uppercase tracking-wider mb-2">Next steps</p>
+            <p className="text-xs text-gray-500 uppercase tracking-wider mb-2">
+              Next steps
+            </p>
             <div className="rounded-2xl bg-white/5 p-4 text-sm text-gray-200">
               {executive_summary.next_steps}
             </div>
@@ -240,24 +285,39 @@ export function AnalysisReport() {
         <FloatingCard className="p-6 space-y-4">
           <div className="flex items-center justify-between">
             <div>
-              <div className="text-xs uppercase tracking-widest text-gray-500">Issues Identified</div>
+              <div className="text-xs uppercase tracking-widest text-gray-500">
+                Issues Identified
+              </div>
               <div className="text-xl font-bold">Key Findings</div>
             </div>
-            <Badge variant="outline">{feature_2_anomalies.anomaly_list.length} Total</Badge>
+            <Badge variant="outline">
+              {feature_2_anomalies.anomaly_list.length} Total
+            </Badge>
           </div>
           <div className="space-y-3">
             {feature_2_anomalies.anomaly_list.slice(0, 4).map((anomaly) => (
-              <div key={anomaly.id} className="rounded-2xl bg-white/5 p-4 border border-white/10">
+              <div
+                key={anomaly.id}
+                className="rounded-2xl bg-white/5 p-4 border border-white/10"
+              >
                 <div className="flex items-center justify-between gap-3 flex-wrap">
                   <div>
                     <div className="text-xs text-gray-400 capitalize">
-                      {anomaly.category} &bull; {anomaly.severity.charAt(0) + anomaly.severity.slice(1).toLowerCase()}
+                      {anomaly.category} &bull;{" "}
+                      {anomaly.severity.charAt(0) +
+                        anomaly.severity.slice(1).toLowerCase()}
                     </div>
-                    <div className="text-sm font-semibold">{formatAnomalyType(anomaly.type)}</div>
+                    <div className="text-sm font-semibold">
+                      {formatAnomalyType(anomaly.type)}
+                    </div>
                   </div>
-                  <Badge variant="outline">{anomaly.confidence}% confidence</Badge>
+                  <Badge variant="outline">
+                    {anomaly.confidence}% confidence
+                  </Badge>
                 </div>
-                <p className="mt-2 text-xs text-gray-400">{anomaly.description}</p>
+                <p className="mt-2 text-xs text-gray-400">
+                  {anomaly.description}
+                </p>
                 {anomaly.affected_amounts?.[0] != null && (
                   <p className="text-xs text-[var(--color-critical)] mt-1 font-medium">
                     Amount: {formatNaira(anomaly.affected_amounts[0])}
@@ -266,14 +326,18 @@ export function AnalysisReport() {
               </div>
             ))}
             {feature_2_anomalies.anomaly_list.length === 0 && (
-              <p className="text-sm text-gray-500 italic">No issues identified in these documents.</p>
+              <p className="text-sm text-gray-500 italic">
+                No issues identified in these documents.
+              </p>
             )}
           </div>
         </FloatingCard>
 
         <FloatingCard className="p-6 space-y-4">
           <div>
-            <div className="text-xs uppercase tracking-widest text-gray-500">Next Steps</div>
+            <div className="text-xs uppercase tracking-widest text-gray-500">
+              Next Steps
+            </div>
             <div className="text-xl font-bold">Recommended Actions</div>
           </div>
           {recommendations.secondary_actions.length > 0 ? (
@@ -288,12 +352,18 @@ export function AnalysisReport() {
               ))}
             </ol>
           ) : (
-            <p className="text-sm text-gray-500 italic">No additional actions required.</p>
+            <p className="text-sm text-gray-500 italic">
+              No additional actions required.
+            </p>
           )}
           {recommendations.communication && (
             <div className="rounded-2xl bg-white/5 p-4 border border-white/10 mt-2">
-              <div className="text-xs text-gray-400 mb-2 uppercase tracking-wider">Who to Notify</div>
-              <p className="text-sm text-gray-200">{recommendations.communication}</p>
+              <div className="text-xs text-gray-400 mb-2 uppercase tracking-wider">
+                Who to Notify
+              </div>
+              <p className="text-sm text-gray-200">
+                {recommendations.communication}
+              </p>
             </div>
           )}
         </FloatingCard>

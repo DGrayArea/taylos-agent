@@ -33,10 +33,12 @@ export default function RootLayout({
 
         <div className="relative z-10">
           <MobileMenuProvider>
-          <Sidebar />
-          <Header />
-          <main className="pl-0 md:pl-64 pt-16 min-h-screen px-4 md:px-8 lg:px-12">{children}</main>
-        </MobileMenuProvider>
+            <Sidebar />
+            <Header />
+            <main className="pl-0 md:pl-64 pt-16 min-h-screen px-4 md:px-8 lg:px-12">
+              {children}
+            </main>
+          </MobileMenuProvider>
         </div>
       </body>
     </html>
