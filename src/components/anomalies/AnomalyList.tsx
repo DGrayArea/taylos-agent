@@ -72,28 +72,28 @@ export function AnomalyList({ anomalies = [] }: AnomalyListProps) {
             onClick={() => setExpandedId(isExpanded ? null : anomaly.id)}
           >
             {/* Header / Summary Row */}
-            <div className="p-5 flex items-center justify-between hover:bg-white/[0.02] transition-colors">
-              <div className="flex items-center gap-6 w-1/2">
-                <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-white/5 border border-white/10 group-hover:border-[var(--color-gold)]/30 transition-colors flex-shrink-0">
+            <div className="p-4 md:p-5 flex flex-col md:flex-row md:items-center justify-between gap-4 md:gap-0 hover:bg-white/[0.02] transition-colors">
+              <div className="flex items-start md:items-center gap-4 md:gap-6 w-full md:w-1/2">
+                <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-white/5 border border-white/10 group-hover:border-[var(--color-gold)]/30 transition-colors flex-shrink-0 mt-1 md:mt-0">
                   <AlertCircle className="w-5 h-5 text-gray-400 group-hover:text-[var(--color-gold)] transition-colors" />
                 </div>
-                <div>
-                  <div className="text-base font-bold text-white mb-1 group-hover:text-[var(--color-gold-light)] transition-colors">
+                <div className="min-w-0 flex-1">
+                  <div className="text-base font-bold text-white mb-1 group-hover:text-[var(--color-gold-light)] transition-colors truncate">
                     {displayType}
                   </div>
-                  <div className="text-xs text-gray-400">
+                  <div className="text-xs text-gray-400 line-clamp-2 md:line-clamp-none">
                     {anomaly.description}
                   </div>
                   {anomaly.related_documents?.length ? (
-                    <div className="text-[11px] text-[var(--color-gold-light)] mt-1">
+                    <div className="text-[11px] text-[var(--color-gold-light)] mt-1 truncate">
                       Document: {anomaly.related_documents.join(", ")}
                     </div>
                   ) : null}
                 </div>
               </div>
 
-              <div className="flex items-center gap-8 w-1/2 justify-end">
-                <div className="text-right hidden md:block">
+              <div className="flex items-center justify-between md:justify-end gap-4 md:gap-8 w-full md:w-1/2 border-t border-white/5 md:border-none pt-4 md:pt-0">
+                <div className="text-left md:text-right hidden sm:block">
                   <div className="text-sm font-medium text-white mb-1">
                     {anomaly.affected_amounts && anomaly.affected_amounts.length > 0
                       ? formatNaira(anomaly.affected_amounts[0])
@@ -108,12 +108,12 @@ export function AnomalyList({ anomalies = [] }: AnomalyListProps) {
 
                 <Badge
                   variant={anomaly.severity as any}
-                  className="w-32 justify-center py-1 text-center"
+                  className="w-auto md:w-32 justify-center py-1 px-3 text-center text-xs md:text-sm whitespace-nowrap"
                 >
                   {displaySeverity}
                 </Badge>
 
-                <div className="text-center w-16">
+                <div className="text-center w-16 flex-shrink-0 hidden xs:block">
                   <div className="text-sm font-bold text-white">
                     {anomaly.anomaly_score}
                   </div>
@@ -122,7 +122,7 @@ export function AnomalyList({ anomalies = [] }: AnomalyListProps) {
                   </div>
                 </div>
 
-                <div className="text-gray-500">
+                <div className="text-gray-500 flex-shrink-0">
                   {isExpanded ? (
                     <ChevronUp className="w-5 h-5" />
                   ) : (
