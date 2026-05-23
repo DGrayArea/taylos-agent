@@ -36,16 +36,18 @@ export function UploadZone() {
     files.length > 0 && files.every((f) => f.status === "complete");
 
   const processFiles = async (rawFiles: File[]) => {
-    const valid = rawFiles.filter(
-      (f) =>
+    const valid = rawFiles.filter((f) => {
+      const lowerName = f.name.toLowerCase();
+      return (
         ACCEPTED_MIME.includes(f.type) ||
-        f.name.endsWith(".csv") ||
-        f.name.endsWith(".json") ||
-        f.name.endsWith(".txt") ||
-        f.name.endsWith(".pdf") ||
-        f.name.endsWith(".xlsx") ||
-        f.name.endsWith(".xls"),
-    );
+        lowerName.endsWith(".csv") ||
+        lowerName.endsWith(".json") ||
+        lowerName.endsWith(".txt") ||
+        lowerName.endsWith(".pdf") ||
+        lowerName.endsWith(".xlsx") ||
+        lowerName.endsWith(".xls")
+      );
+    });
     if (valid.length === 0) return;
 
     const entries = valid.map((f) => ({

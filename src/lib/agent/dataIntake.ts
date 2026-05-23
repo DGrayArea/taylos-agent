@@ -188,6 +188,7 @@ export function processFinancialData(
         date_filed: normalizeDate(new Date().toISOString()),
         sentiment,
         mentions: Array.from(complaintIssues),
+        source_document: doc.filename,
       });
     }
   });

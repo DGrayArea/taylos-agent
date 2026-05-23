@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { FloatingCard } from "@/components/ui/FloatingCard";
 import { Badge } from "@/components/ui/Badge";
 import {
@@ -15,6 +15,7 @@ import {
   AlertCircle,
   FileDown,
   Loader2,
+  Trash2,
 } from "lucide-react";
 import { formatNaira, getDocumentNamesFromAnalysis } from "@/lib/utils";
 import { AnalysisChartsPanel } from "@/components/charts/AnalysisCharts";
@@ -76,7 +77,13 @@ const severityConfig = {
 export function ReportHistoryTable({ history }: ReportHistoryTableProps) {
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [pdfLoading, setPdfLoading] = useState<string | null>(null);
-  const rows = useMemo(() => history ?? [], [history]);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
+  const [rows, setRows] = useState<ReportRow[]>(history ?? []);
+
+  useEffect(() => {
+    setRows(history ?? []);
+  }, [history]);
 
   const selectedReport = useMemo(
     () => rows.find((row) => row.id === expandedId),
@@ -99,6 +106,44 @@ export function ReportHistoryTable({ history }: ReportHistoryTableProps) {
       alert("PDF export failed. Please try again.");
     } finally {
       setPdfLoading(null);
+    }
+  };
+
+  const openDeleteDialog = (reportId: string) => {
+    setPendingDeleteId(reportId);
+  };
+
+  const closeDeleteDialog = () => {
+    setPendingDeleteId(null);
+  };
+
+  const confirmDeleteReport = async () => {
+    if (!pendingDeleteId) {
+      return;
+    }
+
+    setDeletingId(pendingDeleteId);
+    try {
+      const res = await fetch("/api/reports/delete", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: pendingDeleteId }),
+      });
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error?.error ?? "Delete failed");
+      }
+
+      setRows((current) => current.filter((row) => row.id !== pendingDeleteId));
+      if (expandedId === pendingDeleteId) {
+        setExpandedId(null);
+      }
+      closeDeleteDialog();
+    } catch (error) {
+      console.error("Delete report failed", error);
+      alert("Unable to delete this report. Please try again.");
+    } finally {
+      setDeletingId(null);
     }
   };
 
@@ -160,20 +205,31 @@ export function ReportHistoryTable({ history }: ReportHistoryTableProps) {
                     <Badge variant="outline">{row.status}</Badge>
                   </td>
                   <td className="p-4 text-right">
-                    <button
-                      className="text-[var(--color-gold-light)] hover:text-white transition-colors p-2 inline-flex items-center gap-2 text-sm"
-                      type="button"
-                      onClick={() =>
-                        setExpandedId(expandedId === row.id ? null : row.id)
-                      }
-                    >
-                      {expandedId === row.id ? (
-                        <ChevronUp className="w-4 h-4" />
-                      ) : (
-                        <ChevronDown className="w-4 h-4" />
-                      )}
-                      {expandedId === row.id ? "Close" : "View"}
-                    </button>
+                    <div className="flex items-center justify-end gap-2">
+                      <button
+                        className="text-[var(--color-gold-light)] hover:text-white transition-colors p-2 inline-flex items-center gap-2 text-sm"
+                        type="button"
+                        onClick={() =>
+                          setExpandedId(expandedId === row.id ? null : row.id)
+                        }
+                      >
+                        {expandedId === row.id ? (
+                          <ChevronUp className="w-4 h-4" />
+                        ) : (
+                          <ChevronDown className="w-4 h-4" />
+                        )}
+                        {expandedId === row.id ? "Close" : "View"}
+                      </button>
+                      <button
+                        type="button"
+                        disabled={deletingId === row.id}
+                        onClick={() => openDeleteDialog(row.id)}
+                        className="inline-flex items-center gap-2 text-sm text-rose-400 hover:text-white transition-colors p-2 rounded-xl border border-rose-500/20 hover:border-rose-300/40 disabled:opacity-60"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                        {deletingId === row.id ? "Deleting" : "Delete"}
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -420,6 +476,57 @@ export function ReportHistoryTable({ history }: ReportHistoryTableProps) {
             })()}
           </div>
         </FloatingCard>
+      )}
+
+      {pendingDeleteId && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4 py-8">
+          <div className="w-full max-w-lg rounded-3xl bg-[#0f172a] border border-white/10 p-6 shadow-2xl">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <h2 className="text-lg font-semibold">Delete report</h2>
+                <p className="mt-2 text-sm text-gray-400">
+                  This report will be permanently removed from your review
+                  history.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={closeDeleteDialog}
+                className="text-gray-400 hover:text-white"
+              >
+                ✕
+              </button>
+            </div>
+            <div className="mt-6 space-y-4 text-sm text-gray-300">
+              <p>
+                Are you sure you want to delete report{" "}
+                <span className="font-semibold text-white">
+                  {pendingDeleteId.substring(0, 8).toUpperCase()}
+                </span>
+                ? This action cannot be undone.
+              </p>
+            </div>
+            <div className="mt-6 flex flex-wrap justify-end gap-3">
+              <button
+                type="button"
+                onClick={closeDeleteDialog}
+                className="rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-sm text-gray-300 hover:bg-white/10"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={confirmDeleteReport}
+                disabled={deletingId === pendingDeleteId}
+                className="rounded-2xl bg-rose-500 px-4 py-2 text-sm font-semibold text-white hover:bg-rose-400 disabled:opacity-60"
+              >
+                {deletingId === pendingDeleteId
+                  ? "Deleting..."
+                  : "Delete report"}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
