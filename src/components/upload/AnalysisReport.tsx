@@ -90,7 +90,8 @@ export function AnalysisReport() {
       a.click();
       URL.revokeObjectURL(url);
     } catch (err: any) {
-      setPdfError("PDF export failed. Please try downloading the JSON instead.");
+      console.error("Export PDF failed", err);
+      setPdfError("PDF export failed. Try Export JSON or retry.");
     } finally {
       setPdfLoading(false);
     }

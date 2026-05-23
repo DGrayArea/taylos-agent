@@ -77,6 +77,7 @@ const severityConfig = {
 export function ReportHistoryTable({ history }: ReportHistoryTableProps) {
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [pdfLoading, setPdfLoading] = useState<string | null>(null);
+  const [pdfError, setPdfError] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
   const [rows, setRows] = useState<ReportRow[]>(history ?? []);
@@ -103,7 +104,7 @@ export function ReportHistoryTable({ history }: ReportHistoryTableProps) {
       a.click();
       URL.revokeObjectURL(url);
     } catch {
-      alert("PDF export failed. Please try again.");
+      setPdfError("PDF export failed. Try again or download JSON.");
     } finally {
       setPdfLoading(null);
     }
