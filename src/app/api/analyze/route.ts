@@ -1,14 +1,12 @@
 // src/app/api/analyze/route.ts
 // PURPOSE: Runs the full detection pipeline on normalized document payloads.
-// Receives RawDocumentPayload[] from the client (after /api/upload)
-// Returns the ComprehensiveAnalysis (Features 1+2+3 combined).
-//
-// PIPELINE:
-//   payloads → processFinancialData → detectAnomalies → investigations
-//   ↓ Returns ComprehensiveAnalysis JSON
+// Now includes: webhook notifications + audit logging after each analysis.
 
 import { NextResponse } from "next/server";
 import { runPlatformAnalysis } from "@/lib/analysis";
+import { fireWebhooks } from "@/lib/webhook";
+import { logAction } from "@/lib/audit";
+import { storeAnomalyEmbedding } from "@/lib/vectorStore";
 import { RawDocumentPayload } from "@/lib/types";
 
 type AnalyzeRequestBody =
@@ -24,14 +22,12 @@ function getPayloads(body: unknown): RawDocumentPayload[] {
   if (Array.isArray(body)) {
     return body as RawDocumentPayload[];
   }
-
   if (typeof body === "object" && body !== null && "payloads" in body) {
     const payloadContainer = body as { payloads?: unknown };
     if (Array.isArray(payloadContainer.payloads)) {
       return payloadContainer.payloads as RawDocumentPayload[];
     }
   }
-
   return [body as RawDocumentPayload];
 }
 
@@ -49,6 +45,26 @@ export async function POST(request: Request) {
 
     // Run the Platform AI Analysis pipeline
     const analysis = await runPlatformAnalysis(payloads);
+
+    // Log action (non-blocking)
+    logAction("analysis.complete", {
+      metadata: {
+        documents: payloads.length,
+        anomalies: analysis.feature_2_anomalies.total_anomalies_found,
+        source: "dashboard",
+      },
+    }).catch(console.error);
+
+    // Fire webhooks for downstream integrations (non-blocking)
+    fireWebhooks("analysis.complete", {
+      anomalyCount: analysis.feature_2_anomalies.total_anomalies_found,
+      summary: analysis.executive_summary,
+    }).catch(console.error);
+
+    // Store embeddings for pattern learning (non-blocking)
+    for (const anomaly of analysis.feature_2_anomalies.anomaly_list.slice(0, 5)) {
+      storeAnomalyEmbedding(anomaly.id, "latest", anomaly).catch(console.error);
+    }
 
     return NextResponse.json(analysis, { status: 200 });
   } catch (error: unknown) {

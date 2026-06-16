@@ -1,7 +1,10 @@
 "use client";
 
 import { cn } from "@/lib/utils";
-import { LayoutDashboard, UploadCloud, History, Settings, HelpCircle, Shield, Activity } from "lucide-react";
+import {
+  LayoutDashboard, UploadCloud, History, Settings, HelpCircle, Shield,
+  Activity, BarChart3, FolderOpen, Layers, Lock, Book, Code,
+} from "lucide-react";
 import React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -10,10 +13,15 @@ import { useMobileMenu } from "@/lib/MobileMenuContext";
 const navItems = [
   { icon: LayoutDashboard, label: "Dashboard", href: "/" },
   { icon: UploadCloud, label: "Upload Documents", href: "/upload" },
-  { icon: Activity, label: "Financial Monitor", href: "/monitor" },
+  { icon: Activity, label: "Monitor", href: "/monitor" },
+  { icon: BarChart3, label: "Analytics", href: "/analytics" },
+  { icon: FolderOpen, label: "Cases", href: "/cases" },
+  { icon: Layers, label: "Batch Jobs", href: "/batch" },
   { icon: History, label: "Review History", href: "/history" },
-  { icon: Settings, label: "Settings", href: "/settings" },
-  { icon: HelpCircle, label: "Help & Guidance", href: "/help" },
+  { icon: Lock, label: "Audit Log", href: "/audit" },
+  { icon: Code, label: "API Keys", href: "/settings" },
+  { icon: Book, label: "Docs", href: "/docs" },
+  { icon: HelpCircle, label: "Help", href: "/help" },
 ];
 
 export function Sidebar() {
