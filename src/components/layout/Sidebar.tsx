@@ -116,7 +116,7 @@ export function Sidebar() {
       >
         {/* ── Brand ──────────────────────────────────────── */}
         <div className={cn(
-          "h-16 flex items-center border-b border-[var(--color-border)] flex-shrink-0 overflow-hidden",
+          "h-16 md:h-12 flex items-center border-b border-[var(--color-border)] flex-shrink-0 overflow-hidden",
           collapsed ? "justify-center px-0" : "px-4 gap-3",
         )}>
           <div className="w-8 h-8 rounded-lg bg-[var(--color-accent)] flex items-center justify-center flex-shrink-0">
