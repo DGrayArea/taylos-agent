@@ -10,6 +10,8 @@ import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useMobileMenu } from "@/lib/MobileMenuContext";
+import { createClient } from "@/lib/supabase/client";
+import { logout } from "@/app/auth/actions";
 
 // ─── Nav structure ─────────────────────────────────────────────
 const navGroups = [
@@ -51,6 +53,14 @@ export function Sidebar() {
   const pathname = usePathname();
   const { isOpen, setIsOpen } = useMobileMenu();
   const [collapsed, setCollapsed] = useState(false);
+  const [userEmail, setUserEmail] = useState<string | null>(null);
+
+  useEffect(() => {
+    const supabase = createClient();
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (user) setUserEmail(user.email ?? null);
+    });
+  }, []);
 
   useEffect(() => {
     const saved = localStorage.getItem("sidebar-collapsed");
@@ -58,8 +68,19 @@ export function Sidebar() {
   }, []);
 
   useEffect(() => {
-    document.documentElement.style.setProperty('--sidebar-width', collapsed ? '60px' : '256px');
-  }, [collapsed]);
+    const mdMatch = window.matchMedia("(min-width: 768px)");
+    
+    // On md and above, we have a 16px (1rem) margin on the left.
+    // Expanded sidebar is w-64 (256px), collapsed is w-20 (80px).
+    const isMd = mdMatch.matches;
+    const baseWidth = isOpen || !collapsed ? 256 : 80;
+    const totalWidth = isMd ? baseWidth + 16 : baseWidth;
+    
+    document.documentElement.style.setProperty(
+      "--sidebar-width",
+      `${totalWidth}px`
+    );
+  }, [isOpen, collapsed]);
 
   const toggleCollapsed = () => {
     setCollapsed((prev) => {
@@ -67,8 +88,6 @@ export function Sidebar() {
       return !prev;
     });
   };
-
-  const W = collapsed ? "w-[60px]" : "w-64";
 
   return (
     <>
@@ -81,13 +100,18 @@ export function Sidebar() {
         />
       )}
 
+      {/* Desktop Sidebar (Floating style) */}
       <aside
         aria-label="Site navigation"
         className={cn(
-          "h-screen fixed top-0 left-0 flex flex-col z-40 transition-all duration-300 ease-in-out",
-          "bg-[var(--color-surface)] border-r border-[var(--color-border)]",
-          W,
-          isOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0",
+          "fixed flex flex-col z-40 transition-all duration-300 ease-in-out",
+          // Mobile style
+          "top-0 left-0 h-screen bg-[var(--color-surface)] border-r border-[var(--color-border)]",
+          // Desktop floating style
+          "md:top-4 md:left-4 md:h-[calc(100vh-32px)] md:rounded-3xl",
+          "md:bg-white/5 md:backdrop-blur-xl md:border md:border-white/10 md:shadow-[0_8px_32px_rgba(0,0,0,0.4)]",
+          collapsed ? "w-20" : "w-[260px] md:w-64",
+          isOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
         )}
       >
         {/* ── Brand ──────────────────────────────────────── */}
@@ -138,7 +162,7 @@ export function Sidebar() {
                     >
                       {/* Active indicator */}
                       {isActive && (
-                        <span className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 bg-[var(--color-accent)] rounded-r-full" />
+                        <span className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-gradient-to-b from-[var(--color-accent)] to-[var(--color-accent-hover)] rounded-r-full shadow-[var(--shadow-glow)]" />
                       )}
 
                       <item.icon
@@ -176,11 +200,15 @@ export function Sidebar() {
                 aria-hidden="true"
                 className="w-7 h-7 rounded-full bg-[var(--color-accent)] flex items-center justify-center text-white font-bold text-[11px] flex-shrink-0"
               >
-                T
+                {userEmail ? userEmail[0].toUpperCase() : "U"}
               </div>
-              <div className="min-w-0">
-                <p className="text-xs font-semibold text-white truncate">Finance Team</p>
-                <p className="text-[10px] text-gray-600 truncate">taylos-agent.vercel.app</p>
+              <div className="min-w-0 flex-1">
+                <p className="text-xs font-semibold text-white truncate">{userEmail ?? "Loading..."}</p>
+                <form action={logout}>
+                  <button type="submit" className="text-[10px] text-[var(--color-gold-light)] hover:text-white truncate transition-colors text-left">
+                    Sign out
+                  </button>
+                </form>
               </div>
             </div>
           )}

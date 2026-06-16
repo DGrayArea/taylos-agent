@@ -75,6 +75,8 @@ export async function saveReportToHistory(analysis: ComprehensiveAnalysis) {
     return { success: true, id: existing.id, deduplicated: true };
   }
 
+  const { data: { user } } = await supabase.auth.getUser();
+
   const { data, error } = await supabase
     .from("reports")
     .insert([
@@ -84,6 +86,7 @@ export async function saveReportToHistory(analysis: ComprehensiveAnalysis) {
         issues: analysis.feature_2_anomalies.total_anomalies_found,
         status: "Complete",
         data: analysis,
+        user_id: user?.id ?? null,
       },
     ])
     .select()

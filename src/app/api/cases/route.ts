@@ -49,6 +49,8 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "anomaly_id and title are required." }, { status: 400 });
   }
 
+  const { data: { user } } = await supabase.auth.getUser();
+
   const { data, error } = await supabase
     .from("cases")
     .insert({
@@ -61,6 +63,7 @@ export async function POST(request: Request) {
       assignee: assignee ?? null,
       deadline: deadline ?? null,
       comments: [],
+      user_id: user?.id ?? null,
     })
     .select()
     .single();
