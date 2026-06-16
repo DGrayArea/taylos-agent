@@ -1,11 +1,17 @@
-// src/app/batch/page.tsx
-// Feature 6: Batch Processing UI
+import type { Metadata } from "next";
 import { createClient } from "@/lib/supabase/server";
 import { BatchManager } from "@/components/batch/BatchManager";
 
-export const metadata = {
-  title: "Batch Processing | Taylos Finance",
-  description: "Submit and track parallel document analysis jobs at scale.",
+export const metadata: Metadata = {
+  title: "Batch Processing",
+  description:
+    "Submit up to 10,000 financial documents in a single batch job. Track parallel processing progress and download aggregated anomaly results.",
+  alternates: { canonical: "https://taylos-agent.vercel.app/batch" },
+  openGraph: {
+    title: "Batch Processing | Taylos",
+    description: "Process thousands of financial documents in parallel. Track progress and download results.",
+    url: "https://taylos-agent.vercel.app/batch",
+  },
 };
 
 export default async function BatchPage() {

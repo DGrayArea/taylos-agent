@@ -1,11 +1,17 @@
-// src/app/analytics/page.tsx
-// Feature 8: Analytics Dashboard — aggregated metrics, charts, real-time feel
+import type { Metadata } from "next";
 import { createClient } from "@/lib/supabase/server";
 import { AnalyticsDashboard } from "@/components/analytics/AnalyticsDashboard";
 
-export const metadata = {
-  title: "Analytics | Taylos Finance",
-  description: "Aggregated metrics, confidence trends, and anomaly resolution rates.",
+export const metadata: Metadata = {
+  title: "Analytics",
+  description:
+    "Aggregated financial intelligence metrics — anomaly trends, AI confidence scores, severity breakdowns, and case resolution rates across all reviewed documents.",
+  alternates: { canonical: "https://taylos-agent.vercel.app/analytics" },
+  openGraph: {
+    title: "Analytics | Taylos",
+    description: "Aggregated anomaly trends, confidence scores, and case resolution rates.",
+    url: "https://taylos-agent.vercel.app/analytics",
+  },
 };
 
 export default async function AnalyticsPage() {

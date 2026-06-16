@@ -1,11 +1,17 @@
-// src/app/cases/page.tsx
-// Feature 10: Case Management — list view
+import type { Metadata } from "next";
 import { createClient } from "@/lib/supabase/server";
 import { CasesList } from "@/components/cases/CasesList";
 
-export const metadata = {
-  title: "Cases | Taylos Finance",
-  description: "Track, assign, and resolve detected anomaly cases.",
+export const metadata: Metadata = {
+  title: "Cases",
+  description:
+    "Track, assign, and resolve detected financial anomaly cases. Each case links directly to the flagged transaction and AI finding.",
+  alternates: { canonical: "https://taylos-agent.vercel.app/cases" },
+  openGraph: {
+    title: "Cases | Taylos",
+    description: "Manage your anomaly investigation pipeline — open, in-review, and resolved cases.",
+    url: "https://taylos-agent.vercel.app/cases",
+  },
 };
 
 export default async function CasesPage() {

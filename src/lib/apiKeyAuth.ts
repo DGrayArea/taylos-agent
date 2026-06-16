@@ -1,5 +1,5 @@
 // src/lib/apiKeyAuth.ts
-// Feature 1: REST API — API Key validation + rate limiting
+// Feature 1: REST API — API Key validation + per-minute rate limiting
 import { createClient } from "@supabase/supabase-js";
 import crypto from "crypto";
 
@@ -12,8 +12,8 @@ export interface ApiKeyRecord {
   id: string;
   key_hash: string;
   org_name: string;
-  rate_limit: number;
-  requests_this_hour: number;
+  rate_limit: number;        // requests per minute (e.g. 5)
+  requests_this_hour: number; // reused column — now counts per-minute window
   last_reset_at: string;
   active: boolean;
 }
@@ -46,10 +46,10 @@ export async function validateApiKey(rawKey: string | null): Promise<AuthResult>
 
   const record = data as ApiKeyRecord;
 
-  // Reset hourly counter if needed
+  // Reset per-minute counter if the window has elapsed (60 seconds)
   const lastReset = new Date(record.last_reset_at).getTime();
   const now = Date.now();
-  if (now - lastReset > 3_600_000) {
+  if (now - lastReset > 60_000) {
     await supabaseAdmin
       .from("api_keys")
       .update({ requests_this_hour: 0, last_reset_at: new Date().toISOString() })
@@ -58,7 +58,11 @@ export async function validateApiKey(rawKey: string | null): Promise<AuthResult>
   }
 
   if (record.requests_this_hour >= record.rate_limit) {
-    return { ok: false, status: 429, error: "Rate limit exceeded. Try again next hour." };
+    return {
+      ok: false,
+      status: 429,
+      error: `Rate limit exceeded — ${record.rate_limit} requests per minute. Try again shortly.`,
+    };
   }
 
   // Increment counter

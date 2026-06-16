@@ -31,8 +31,8 @@ function Section({ id, title, icon: Icon, children }: { id: string; title: strin
   return (
     <section id={id} className="scroll-mt-24">
       <div className="flex items-center gap-3 mb-6">
-        <div className="w-8 h-8 rounded-lg bg-[var(--color-gold)]/15 flex items-center justify-center">
-          <Icon className="w-4 h-4 text-[var(--color-gold)]" />
+        <div className="w-8 h-8 rounded-lg bg-[var(--color-accent-muted)] flex items-center justify-center">
+          <Icon className="w-4 h-4 text-[var(--color-accent)]" />
         </div>
         <h2 className="text-2xl font-bold">{title}</h2>
       </div>
@@ -81,7 +81,7 @@ const NAV_ITEMS = [
   { id: "security", label: "Security & Privacy", icon: Key },
 ];
 
-export function DocsPage() {
+export function DevDocsPage() {
   const [activeSection, setActiveSection] = useState("overview");
 
   const scrollTo = (id: string) => {
@@ -92,20 +92,25 @@ export function DocsPage() {
   return (
     <div className="flex min-h-screen">
       {/* Sticky sidebar nav */}
-      <aside className="hidden md:flex flex-col w-56 flex-shrink-0 sticky top-16 h-[calc(100vh-4rem)] overflow-y-auto border-r border-white/5 py-8 px-4 gap-1">
-        <div className="text-xs text-gray-500 uppercase tracking-wider px-2 mb-2">Documentation</div>
+      <aside className="hidden md:flex flex-col w-56 flex-shrink-0 sticky top-16 h-[calc(100vh-4rem)] overflow-y-auto border-r border-[var(--color-border)] py-8 px-4 gap-1">
+        <div className="text-xs text-gray-500 uppercase tracking-wider px-2 mb-2">Developer Docs</div>
         {NAV_ITEMS.map((item) => (
           <button
             key={item.id}
             onClick={() => scrollTo(item.id)}
-            className={`flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm text-left transition-all ${
+            className={`flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm text-left transition-all w-full ${
               activeSection === item.id
-                ? "bg-white/8 text-white"
+                ? "bg-[var(--color-accent-muted)] text-white"
                 : "text-gray-400 hover:text-white hover:bg-white/5"
             }`}
           >
             <item.icon className="w-3.5 h-3.5 flex-shrink-0" />
-            {item.label}
+            <span className="flex-1 truncate">{item.label}</span>
+            {item.id === "notifications" && (
+              <span className="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-[var(--color-gold-muted)] text-[var(--color-gold)] border border-[var(--color-gold)]/25 flex-shrink-0">
+                Soon
+              </span>
+            )}
           </button>
         ))}
       </aside>
@@ -113,30 +118,28 @@ export function DocsPage() {
       {/* Content */}
       <div className="flex-1 px-4 md:px-12 py-8 max-w-4xl space-y-20 pb-40">
         {/* Overview */}
-        <Section id="overview" title="Platform Overview" icon={Book}>
+        <Section id="overview" title="API & Platform Overview" icon={Book}>
           <p className="text-gray-300 leading-relaxed mb-4">
-            <strong className="text-white">Taylos Agent</strong> is an enterprise-grade financial intelligence platform that
-            uses AI (powered by Groq LLaMA) to detect anomalies, duplicates, fraud indicators, and policy violations in financial documents.
-            It supports bank statements, invoices, transaction logs, payroll records, and customer complaints.
+            <strong className="text-white">Taylos</strong> provides a REST API to interact programmatically with the platform.
+            You can analyse financial documents, manage batch jobs, retrieve anomalies, and register webhooks.
           </p>
           <p className="text-gray-300 leading-relaxed mb-6">
-            Every feature on this platform is available both through the dashboard UI and through the REST API, making it suitable
-            for embedding into your existing workflows, compliance systems, or customer-facing products.
+            Every feature is exposed via the API, making it suitable for embedding into your own pipelines and applications.
           </p>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {[
               { icon: Code, label: "REST API", desc: "POST documents, get JSON back" },
-              { icon: ExternalLink, label: "Embeddable Widget", desc: "Drop into any website in 60 seconds" },
+              { icon: ExternalLink, label: "Embeddable Widget", desc: "Drop into any website easily" },
               { icon: Webhook, label: "Webhooks", desc: "Signed delivery to your endpoints" },
               { icon: Activity, label: "Live Monitoring", desc: "Continuous anomaly detection" },
-              { icon: Layers, label: "Batch Processing", desc: "1 to 10,000 documents at once" },
+              { icon: Layers, label: "Batch Processing", desc: "Process up to 10,000 documents" },
               { icon: FileText, label: "Case Management", desc: "Tracked anomaly resolution workflow" },
-              { icon: BarChart3, label: "Analytics", desc: "Aggregated confidence + resolution metrics" },
+              { icon: BarChart3, label: "Analytics", desc: "Aggregated metrics" },
               { icon: Lock, label: "Audit Log", desc: "Immutable, queryable, exportable" },
             ].map((f) => (
-              <div key={f.label} className="rounded-xl bg-white/5 border border-white/10 p-4 flex gap-3">
-                <f.icon className="w-4 h-4 text-[var(--color-gold)] mt-0.5 flex-shrink-0" />
+              <div key={f.label} className="rounded-xl bg-[var(--color-surface-2)] border border-[var(--color-border)] p-4 flex gap-3">
+                <f.icon className="w-4 h-4 text-[var(--color-accent)] mt-0.5 flex-shrink-0" />
                 <div>
                   <div className="font-semibold text-sm">{f.label}</div>
                   <div className="text-xs text-gray-500 mt-0.5">{f.desc}</div>
@@ -149,14 +152,14 @@ export function DocsPage() {
         {/* REST API */}
         <Section id="rest-api" title="REST API" icon={Code}>
           <p className="text-gray-300 leading-relaxed mb-6">
-            All REST endpoints live under <code className="text-[var(--color-gold)] bg-black/30 px-1.5 py-0.5 rounded text-sm">/api/v1/</code>.
-            Every request requires an <code className="text-[var(--color-gold)] bg-black/30 px-1.5 py-0.5 rounded text-sm">X-API-Key</code> header.
+            All REST endpoints live under <code className="text-[var(--color-accent)] bg-black/30 px-1.5 py-0.5 rounded text-sm">/api/v1/</code>.
+            Every request requires an <code className="text-[var(--color-accent)] bg-black/30 px-1.5 py-0.5 rounded text-sm">X-API-Key</code> header.
             Get your API key from <strong>Settings → API Keys</strong>.
           </p>
 
           <SubSection title="Authentication">
             <CodeBlock lang="http" code={`POST /api/v1/analyze HTTP/1.1
-Host: your-domain.com
+Host: taylos-agent.vercel.app
 X-API-Key: tk_your_api_key_here
 Content-Type: application/json`} />
             <Callout type="warning">
@@ -165,8 +168,8 @@ Content-Type: application/json`} />
           </SubSection>
 
           <SubSection title="Analyse Documents">
-            <p className="text-gray-400 text-sm mb-3">Submit one or more documents for AI analysis. Returns structured JSON with all anomalies classified and confidence-scored.</p>
-            <CodeBlock lang="curl" code={`curl -X POST https://your-domain.com/api/v1/analyze \\
+            <p className="text-gray-400 text-sm mb-3">Submit one or more documents for analysis. Returns structured JSON with anomalies classified.</p>
+            <CodeBlock lang="curl" code={`curl -X POST https://taylos-agent.vercel.app/api/v1/analyze \\
   -H "X-API-Key: tk_your_key" \\
   -H "Content-Type: application/json" \\
   -d '[
@@ -200,22 +203,22 @@ Content-Type: application/json`} />
           </SubSection>
 
           <SubSection title="Rate Limiting">
-            <p className="text-gray-400 text-sm mb-3">Each API key has a configurable hourly request limit (default: 100 req/hour). When exceeded:</p>
+            <p className="text-gray-400 text-sm mb-3">Each API key has a default limit of <strong>5 requests per minute</strong>. When exceeded:</p>
             <CodeBlock lang="json" code={`// HTTP 429
-{ "error": "Rate limit exceeded. Try again next hour." }`} />
+{ "error": "Rate limit exceeded. Try again next minute." }`} />
           </SubSection>
 
           <SubSection title="All Endpoints">
             <div className="overflow-x-auto">
-              <table className="w-full text-sm border border-white/10 rounded-xl overflow-hidden">
-                <thead className="bg-white/5">
+              <table className="w-full text-sm border border-[var(--color-border)] rounded-xl overflow-hidden">
+                <thead className="bg-[var(--color-surface-2)]">
                   <tr>
                     {["Method", "Endpoint", "Description"].map((h) => (
                       <th key={h} className="px-4 py-3 text-left text-xs text-gray-500 uppercase tracking-wider">{h}</th>
                     ))}
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-white/5">
+                <tbody className="divide-y divide-[var(--color-border)]">
                   {[
                     ["POST", "/api/v1/analyze", "Analyse documents"],
                     ["GET", "/api/v1/status/:jobId", "Poll job status"],
@@ -231,7 +234,7 @@ Content-Type: application/json`} />
                     ["GET", "/api/notifications/send", "Preview email (no send)"],
                     ["POST", "/api/monitor/poll", "Trigger live monitoring check"],
                   ].map(([method, endpoint, desc]) => (
-                    <tr key={endpoint} className="hover:bg-white/3">
+                    <tr key={endpoint} className="hover:bg-white/[0.02]">
                       <td className="px-4 py-3">
                         <span className={`px-2 py-0.5 rounded text-xs font-mono font-bold ${method === "POST" ? "bg-blue-400/15 text-blue-300" : method === "GET" ? "bg-green-400/15 text-green-300" : "bg-yellow-400/15 text-yellow-300"}`}>
                           {method}
@@ -250,39 +253,39 @@ Content-Type: application/json`} />
         {/* Widget */}
         <Section id="widget" title="Embeddable Widget" icon={ExternalLink}>
           <p className="text-gray-300 leading-relaxed mb-6">
-            Drop a single <code className="text-[var(--color-gold)] bg-black/30 px-1.5 py-0.5 rounded text-sm">&lt;script&gt;</code> tag
-            into any website to embed a fully functional analysis widget. No build step, no backend setup.
+            Drop a single <code className="text-[var(--color-accent)] bg-black/30 px-1.5 py-0.5 rounded text-sm">&lt;script&gt;</code> tag
+            into any website to embed a fully functional analysis widget. No build step required.
           </p>
 
           <SubSection title="Quick Embed">
             <CodeBlock lang="html" code={`<!-- Add before </body> -->
 <script
-  src="https://your-domain.com/widget.js"
+  src="https://taylos-agent.vercel.app/widget.js"
   data-api-key="tk_your_api_key"
-  data-url="https://your-domain.com"
+  data-url="https://taylos-agent.vercel.app"
   data-theme="dark"
 ></script>`} />
           </SubSection>
 
           <SubSection title="Widget Attributes">
             <div className="overflow-x-auto">
-              <table className="w-full text-sm border border-white/10 rounded-xl overflow-hidden">
-                <thead className="bg-white/5">
+              <table className="w-full text-sm border border-[var(--color-border)] rounded-xl overflow-hidden">
+                <thead className="bg-[var(--color-surface-2)]">
                   <tr>
                     {["Attribute", "Required", "Description"].map((h) => (
                       <th key={h} className="px-4 py-3 text-left text-xs text-gray-500 uppercase tracking-wider">{h}</th>
                     ))}
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-white/5 text-sm">
+                <tbody className="divide-y divide-[var(--color-border)] text-sm">
                   {[
                     ["data-api-key", "Yes", "Your API key (tk_...)"],
-                    ["data-url", "Yes", "Your Taylos deployment URL"],
+                    ["data-url", "Yes", "Taylos deployment URL"],
                     ["data-theme", "No", "dark (default) or light"],
                     ["data-container", "No", "CSS selector for custom mount point"],
                   ].map(([attr, req, desc]) => (
                     <tr key={attr}>
-                      <td className="px-4 py-3 font-mono text-xs text-[var(--color-gold)]">{attr}</td>
+                      <td className="px-4 py-3 font-mono text-xs text-[var(--color-accent)]">{attr}</td>
                       <td className="px-4 py-3 text-xs">{req}</td>
                       <td className="px-4 py-3 text-gray-400 text-xs">{desc}</td>
                     </tr>
@@ -301,7 +304,7 @@ TaylosWidget.setApiKey("tk_new_key") // Swap API key at runtime`} />
           </SubSection>
 
           <Callout type="info">
-            The widget renders in an iframe pointing to <code>/widget</code> on your deployment. The parent page and iframe share no cookies or state — the API key is passed only via URL parameter to the widget endpoint.
+            The widget renders in an iframe pointing to <code>/widget</code>. The API key is passed securely via URL parameter to the widget endpoint.
           </Callout>
         </Section>
 
@@ -357,7 +360,7 @@ app.post("/webhook", express.raw({ type: "application/json" }), (req, res) => {
                 "analysis.complete", "batch.complete", "monitor.alert",
                 "case.create", "case.resolve", "notification.send",
               ].map((e) => (
-                <div key={e} className="bg-white/5 border border-white/10 rounded-lg px-3 py-2 font-mono text-xs text-gray-300">
+                <div key={e} className="bg-[var(--color-surface-2)] border border-[var(--color-border)] rounded-lg px-3 py-2 font-mono text-xs text-gray-300">
                   {e}
                 </div>
               ))}
@@ -373,15 +376,15 @@ app.post("/webhook", express.raw({ type: "application/json" }), (req, res) => {
         <Section id="monitoring" title="Continuous Monitoring" icon={Activity}>
           <p className="text-gray-300 leading-relaxed mb-6">
             Instead of one-off uploads, connect a live data source URL and check it on a set interval.
-            The dashboard polls <code className="text-[var(--color-gold)] bg-black/30 px-1.5 py-0.5 rounded text-sm">/api/monitor/poll</code> and pushes
+            The dashboard polls <code className="text-[var(--color-accent)] bg-black/30 px-1.5 py-0.5 rounded text-sm">/api/monitor/poll</code> and pushes
             real-time alerts when anomalies above your threshold are detected.
           </p>
 
           <SubSection title="API Usage">
-            <CodeBlock lang="curl" code={`curl -X POST /api/monitor/poll \\
+            <CodeBlock lang="curl" code={`curl -X POST https://taylos-agent.vercel.app/api/monitor/poll \\
   -H "Content-Type: application/json" \\
   -d '{
-    "sourceUrl": "https://your-erp-system.com/exports/daily-transactions.csv",
+    "sourceUrl": "https://erp.example.com/exports/daily-transactions.csv",
     "accountRef": "ACCT-001",
     "threshold": "high"
   }'`} />
@@ -407,7 +410,7 @@ app.post("/webhook", express.raw({ type: "application/json" }), (req, res) => {
         {/* Batch */}
         <Section id="batch" title="Batch Processing" icon={Layers}>
           <p className="text-gray-300 leading-relaxed mb-6">
-            Submit thousands of documents in a single request. Workers run in parallel (up to 5 concurrent),
+            Submit thousands of documents in a single request. Workers run in parallel,
             and the system aggregates results into a single batch report. Scales from 1 to 10,000 document sets.
           </p>
 
@@ -424,7 +427,7 @@ app.post("/webhook", express.raw({ type: "application/json" }), (req, res) => {
           </SubSection>
 
           <SubSection title="Poll Batch Status">
-            <CodeBlock lang="curl" code={`curl /api/v1/batch?batchId=YOUR_BATCH_ID \\
+            <CodeBlock lang="curl" code={`curl https://taylos-agent.vercel.app/api/v1/batch?batchId=YOUR_BATCH_ID \\
   -H "X-API-Key: tk_..."`} />
             <CodeBlock lang="json" code={`{
   "batchId": "uuid",
@@ -442,7 +445,7 @@ app.post("/webhook", express.raw({ type: "application/json" }), (req, res) => {
         {/* Cases */}
         <Section id="cases" title="Case Management" icon={FileText}>
           <p className="text-gray-300 leading-relaxed mb-6">
-            Each detected anomaly can be tracked as a <strong>case</strong> — similar to a ticket in a helpdesk system.
+            Each detected anomaly can be tracked as a <strong>case</strong>.
             Cases have status, assignees, deadlines, comments, and resolution notes. They're linked back to the originating anomaly and report.
           </p>
 
@@ -465,7 +468,7 @@ app.post("/webhook", express.raw({ type: "application/json" }), (req, res) => {
           </SubSection>
 
           <SubSection title="Create a Case via API">
-            <CodeBlock lang="curl" code={`curl -X POST /api/cases \\
+            <CodeBlock lang="curl" code={`curl -X POST https://taylos-agent.vercel.app/api/cases \\
   -H "Content-Type: application/json" \\
   -d '{
     "anomaly_id": "ANOM-001",
@@ -473,13 +476,13 @@ app.post("/webhook", express.raw({ type: "application/json" }), (req, res) => {
     "title": "Duplicate payment to Unknown Vendor",
     "description": "Two identical ₦50,000 payments within 24 hours.",
     "severity": "HIGH",
-    "assignee": "jane.doe@bank.com",
+    "assignee": "jane.doe@example.com",
     "deadline": "2025-02-01"
   }'`} />
           </SubSection>
 
           <SubSection title="Add a Comment">
-            <CodeBlock lang="curl" code={`curl -X PATCH /api/cases/CASE_ID \\
+            <CodeBlock lang="curl" code={`curl -X PATCH https://taylos-agent.vercel.app/api/cases/CASE_ID \\
   -H "Content-Type: application/json" \\
   -d '{
     "comment": "Contacted vendor — awaiting invoice copy.",
@@ -488,7 +491,7 @@ app.post("/webhook", express.raw({ type: "application/json" }), (req, res) => {
           </SubSection>
 
           <SubSection title="Resolve a Case">
-            <CodeBlock lang="curl" code={`curl -X PATCH /api/cases/CASE_ID \\
+            <CodeBlock lang="curl" code={`curl -X PATCH https://taylos-agent.vercel.app/api/cases/CASE_ID \\
   -H "Content-Type: application/json" \\
   -d '{
     "status": "resolved",
@@ -500,53 +503,49 @@ app.post("/webhook", express.raw({ type: "application/json" }), (req, res) => {
         {/* Analytics */}
         <Section id="analytics" title="Analytics Dashboard" icon={BarChart3}>
           <p className="text-gray-300 leading-relaxed mb-4">
-            The <strong>/analytics</strong> page shows pre-computed aggregates from all your reports and cases:
+            The <strong>/analytics</strong> endpoint provides pre-computed aggregates from all your reports and cases:
           </p>
           <ul className="list-none space-y-2 mb-6">
             {[
               "Total anomalies detected over time (area chart)",
-              "AI confidence scores trend across reports",
+              "Confidence scores trend across reports",
               "Severity breakdown (Critical / High / Medium / Low) as a donut chart",
               "Case status distribution (Open / In Review / Resolved)",
               "Recent reports table with data quality scores",
               "Live clock — the dashboard time updates every second",
             ].map((item, i) => (
               <li key={i} className="flex items-start gap-2 text-gray-300 text-sm">
-                <ChevronRight className="w-4 h-4 text-[var(--color-gold)] mt-0.5 flex-shrink-0" />
+                <ChevronRight className="w-4 h-4 text-[var(--color-accent)] mt-0.5 flex-shrink-0" />
                 {item}
               </li>
             ))}
           </ul>
-          <Callout type="tip">
-            For real-time updates via WebSocket, implement a Supabase Realtime subscription on the <code>reports</code> table
-            and call <code>router.refresh()</code> on insert events.
-          </Callout>
         </Section>
 
         {/* RBAC */}
         <Section id="rbac" title="Roles & Permissions" icon={Shield}>
           <p className="text-gray-300 leading-relaxed mb-6">
-            Four built-in roles control what each user can see and do. Roles are stored in the <code className="text-[var(--color-gold)] bg-black/30 px-1.5 py-0.5 rounded text-sm">user_roles</code> table
+            Four built-in roles control what each user can see and do. Roles are stored in the <code className="text-[var(--color-accent)] bg-black/30 px-1.5 py-0.5 rounded text-sm">user_roles</code> table
             and checked on every API request.
           </p>
 
           <div className="overflow-x-auto">
-            <table className="w-full text-sm border border-white/10 rounded-xl overflow-hidden">
-              <thead className="bg-white/5">
+            <table className="w-full text-sm border border-[var(--color-border)] rounded-xl overflow-hidden">
+              <thead className="bg-[var(--color-surface-2)]">
                 <tr>
                   {["Role", "Cases", "Reports", "Analytics", "Audit Log", "API Keys", "Delete"].map((h) => (
                     <th key={h} className="px-4 py-3 text-left text-xs text-gray-500 uppercase tracking-wider">{h}</th>
                   ))}
                 </tr>
               </thead>
-              <tbody className="divide-y divide-white/5 text-sm text-center">
+              <tbody className="divide-y divide-[var(--color-border)] text-sm text-center">
                 {[
                   ["Admin", "✅", "✅", "✅", "✅", "✅", "✅"],
                   ["Analyst", "✅ R/W", "✅ R", "✅", "❌", "❌", "❌"],
                   ["Auditor", "✅ R", "✅ R", "✅", "✅ R", "❌", "❌"],
                   ["Viewer", "✅ R", "✅ R", "✅", "❌", "❌", "❌"],
                 ].map(([role, ...perms]) => (
-                  <tr key={role} className="hover:bg-white/3">
+                  <tr key={role} className="hover:bg-white/[0.02]">
                     <td className="px-4 py-3 font-semibold text-left text-white">{role}</td>
                     {perms.map((p, i) => (
                       <td key={i} className={`px-4 py-3 text-xs ${p.includes("✅") ? "text-green-400" : "text-gray-600"}`}>{p}</td>
@@ -562,8 +561,7 @@ app.post("/webhook", express.raw({ type: "application/json" }), (req, res) => {
         <Section id="audit" title="Audit Log" icon={Lock}>
           <p className="text-gray-300 leading-relaxed mb-4">
             Every action on the platform is written to an <strong>immutable, append-only</strong> audit log.
-            The Supabase row-level security policy allows INSERT only — no UPDATE or DELETE.
-            This makes it suitable for regulatory examination.
+            The database security policy allows INSERT only — no UPDATE or DELETE.
           </p>
 
           <SubSection title="Logged Events">
@@ -576,7 +574,7 @@ app.post("/webhook", express.raw({ type: "application/json" }), (req, res) => {
                 "apikey.revoke", "webhook.register", "user.login",
                 "settings.update",
               ].map((e) => (
-                <div key={e} className="bg-white/5 border border-white/10 rounded-lg px-2 py-1.5 font-mono text-xs text-gray-400">
+                <div key={e} className="bg-[var(--color-surface-2)] border border-[var(--color-border)] rounded-lg px-2 py-1.5 font-mono text-xs text-gray-400">
                   {e}
                 </div>
               ))}
@@ -585,52 +583,41 @@ app.post("/webhook", express.raw({ type: "application/json" }), (req, res) => {
 
           <SubSection title="Export">
             <p className="text-gray-400 text-sm">
-              The Audit Log page (<strong>/audit</strong>) has a one-click CSV export of filtered log entries,
-              ready for regulatory submission. Only <strong>Admin</strong> and <strong>Auditor</strong> roles can view this page.
+              The Audit Log endpoint provides CSV export of filtered log entries,
+              ready for regulatory submission.
             </p>
           </SubSection>
         </Section>
 
         {/* Notifications */}
-        <Section id="notifications" title="Customer Notifications" icon={Mail}>
+        <Section id="notifications" title="Notifications" icon={Mail}>
+          <div className="rounded-xl border border-dashed border-[var(--color-gold)]/30 bg-[var(--color-gold)]/5 p-4 flex items-start gap-3 mb-6">
+            <AlertTriangle className="w-4 h-4 text-[var(--color-gold)] mt-0.5 flex-shrink-0" />
+            <div>
+              <div className="text-sm font-semibold text-[var(--color-gold)] mb-1">Coming Soon — Email Notifications</div>
+              <p className="text-xs text-yellow-200/70 leading-relaxed">
+                Email delivery via Resend is currently paused. The API endpoint and template system are built and ready.
+              </p>
+            </div>
+          </div>
+
           <p className="text-gray-300 leading-relaxed mb-6">
-            The agent generates plain-language emails from case findings. Emails are drafted in the case detail view,
-            previewed before sending, and dispatched via <strong>Resend</strong>.
+            Once enabled, emails are drafted automatically from findings, previewed before sending, and dispatched.
           </p>
 
-          <SubSection title="Send an Anomaly Alert Email">
-            <CodeBlock lang="curl" code={`curl -X POST /api/notifications/send \\
-  -H "Content-Type: application/json" \\
-  -d '{
-    "type": "anomaly_alert",
-    "caseId": "uuid",
-    "anomalyId": "ANOM-001",
-    "reportId": "uuid",
-    "recipientEmail": "customer@example.com",
-    "recipientName": "Acme Corp"
-  }'`} />
+          <SubSection title="Preview Without Sending (works now)">
+            <CodeBlock lang="curl" code={`curl "https://taylos-agent.vercel.app/api/notifications/send?anomalyId=ANOM-001&reportId=uuid&caseId=uuid"`} />
           </SubSection>
-
-          <SubSection title="Preview Without Sending">
-            <CodeBlock lang="curl" code={`curl "/api/notifications/send?anomalyId=ANOM-001&reportId=uuid&caseId=uuid"`} />
-            <p className="text-gray-400 text-sm mt-2">Returns <code>&#123; subject, html, text &#125;</code> — render the HTML to inspect before dispatching.</p>
-          </SubSection>
-
-          <Callout type="info">
-            Set the <code>RESEND_API_KEY</code> and <code>RESEND_FROM_EMAIL</code> environment variables to enable delivery.
-            If <code>RESEND_API_KEY</code> is not set, the API still returns the email preview — useful during development.
-          </Callout>
         </Section>
 
         {/* Chat */}
         <Section id="chat" title="Agent Chat Interface" icon={MessageSquare}>
           <p className="text-gray-300 leading-relaxed mb-6">
             Each case and analysis report includes a conversational AI assistant that has full context of the findings.
-            Analysts can ask free-form questions and get streamed, reasoned responses. Conversation history is saved per case.
           </p>
 
           <SubSection title="Usage">
-            <p className="text-gray-400 text-sm mb-3">The chat interface is embedded directly in the dashboard and case detail pages. It calls <code>/api/chat</code> with:</p>
+            <p className="text-gray-400 text-sm mb-3">The chat interface calls <code>/api/chat</code> with:</p>
             <CodeBlock lang="json" code={`{
   "message": "Why was this payment flagged?",
   "context": { /* full analysis JSON */ },
@@ -640,28 +627,12 @@ app.post("/webhook", express.raw({ type: "application/json" }), (req, res) => {
   ]
 }`} />
           </SubSection>
-
-          <SubSection title="Pattern Learning">
-            <p className="text-gray-400 text-sm">
-              Every analysed anomaly is embedded into the <code>anomaly_embeddings</code> table. When a new analysis runs,
-              the top 5 most similar past cases are retrieved and injected as context — making the AI get smarter over time
-              without retraining.
-            </p>
-          </SubSection>
         </Section>
 
         {/* Security */}
         <Section id="security" title="Security & Privacy" icon={Key}>
           <SubSection title="Data Encryption">
-            <p className="text-gray-400 text-sm mb-3">Sensitive fields are encrypted at rest using <strong>AES-256-GCM</strong>:</p>
-            <CodeBlock lang="typescript" code={`import { encryptField, decryptField } from "@/lib/privacy";
-
-const encrypted = encryptField("sensitive-value");  // returns base64
-const original = decryptField(encrypted);           // returns plaintext`} />
-            <Callout type="warning">
-              Set <code>ENCRYPTION_KEY</code> to a 64-character hex string (32 bytes) in production.
-              Never use the dev fallback key in any environment with real data.
-            </Callout>
+            <p className="text-gray-400 text-sm mb-3">Sensitive fields are encrypted at rest using <strong>AES-256-GCM</strong>.</p>
           </SubSection>
 
           <SubSection title="PII Masking">
@@ -670,20 +641,6 @@ const original = decryptField(encrypted);           // returns plaintext`} />
 
 maskPII("Account 0123456789 called from 08012345678");
 // → "Account ******6789 called from 0801****678"`} />
-            <p className="text-gray-400 text-sm mt-2">Detected and masked: account numbers, BVN, NIN, Nigerian phone numbers, email addresses.</p>
-          </SubSection>
-
-          <SubSection title="Data Retention & GDPR">
-            <p className="text-gray-400 text-sm mb-3">
-              Run the retention job to auto-delete records past the configured period:
-            </p>
-            <CodeBlock lang="bash" code={`# Via cron or manual trigger
-curl "https://your-domain.com/api/cron/retention?secret=YOUR_CRON_SECRET"
-
-# Configure in .env:
-DATA_RETENTION_DAYS=365
-CRON_SECRET=your-secret`} />
-            <p className="text-gray-400 text-sm mt-2">Deletes: reports, chat history, batch jobs older than <code>DATA_RETENTION_DAYS</code>. Audit log uses 2× the retention period.</p>
           </SubSection>
 
           <SubSection title="Required Environment Variables">
@@ -700,18 +657,18 @@ ENCRYPTION_KEY=64_char_hex_string
 
 # Email
 RESEND_API_KEY=re_...
-RESEND_FROM_EMAIL=noreply@your-domain.com
+RESEND_FROM_EMAIL=noreply@taylos-agent.vercel.app
 
 # Webhooks / Cron
 CRON_SECRET=your-cron-secret
 
 # App
-NEXT_PUBLIC_APP_URL=https://your-domain.com`} />
+NEXT_PUBLIC_APP_URL=https://taylos-agent.vercel.app`} />
           </SubSection>
         </Section>
 
-        <div className="border-t border-white/10 pt-8 text-center text-gray-600 text-sm">
-          Taylos Agent · Financial Intelligence Platform · Documentation v1.0
+        <div className="border-t border-[var(--color-border)] pt-8 text-center text-gray-600 text-sm">
+          Taylos · Developer Documentation v1.0
         </div>
       </div>
     </div>

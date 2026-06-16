@@ -296,7 +296,7 @@ export function ReportHistoryTable({ history }: ReportHistoryTableProps) {
                   )}
                   {pdfLoading === selectedReport.id
                     ? "Generating..."
-                    : "Export PDF"}
+                    : "Export Anomalies (PDF)"}
                 </button>
                 <button
                   onClick={() =>
@@ -308,7 +308,7 @@ export function ReportHistoryTable({ history }: ReportHistoryTableProps) {
                   className="inline-flex items-center gap-2 text-gray-400 hover:text-white text-sm transition-colors px-4 py-2 rounded-xl border border-white/10 hover:border-white/30"
                 >
                   <Download className="w-4 h-4" />
-                  Export JSON
+                  Export Anomalies (JSON)
                 </button>
               </div>
             </div>

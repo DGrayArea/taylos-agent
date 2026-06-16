@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { createClient } from "@/lib/supabase/server";
 import { AnomalyOverview } from "@/components/anomalies/AnomalyOverview";
 import { AnomalyList } from "@/components/anomalies/AnomalyList";
@@ -6,11 +7,17 @@ import { AnalysisChartsPanel } from "@/components/charts/AnalysisCharts";
 import { DocumentChat } from "@/components/chat/DocumentChat";
 import { ExportExcelButton } from "@/components/upload/ExportExcelButton";
 import Link from "next/link";
-import { FileDown, Table } from "lucide-react";
 
-export const metadata = {
-  title: "Dashboard | Taylos Finance",
-  description: "Review your latest financial document analysis and findings.",
+export const metadata: Metadata = {
+  title: "Dashboard",
+  description:
+    "Review your latest AI-generated financial analysis. See flagged anomalies, duplicate payments, and fraud indicators detected from your documents.",
+  alternates: { canonical: "https://taylos-agent.vercel.app" },
+  openGraph: {
+    title: "Dashboard | Taylos",
+    description: "Your latest financial document review — anomalies, confidence scores, and AI findings.",
+    url: "https://taylos-agent.vercel.app",
+  },
 };
 
 export default async function Dashboard() {
@@ -84,17 +91,10 @@ export default async function Dashboard() {
         {hasData && (
           <div className="flex gap-3 flex-wrap">
             <Link
-              href="/monitor"
+              href="/history"
               className="px-4 py-2 rounded-xl border border-white/10 text-gray-300 hover:text-white hover:border-white/30 text-sm transition-colors"
             >
               View All Reports
-            </Link>
-            <Link
-              href={`/api/report/pdf?id=${latestReport.id}`}
-              className="px-4 py-2 rounded-xl bg-[var(--color-gold)] text-[var(--color-navy)] font-semibold text-sm hover:opacity-90 transition-opacity flex items-center gap-2"
-            >
-              <FileDown className="w-4 h-4" />
-              Export PDF
             </Link>
             <ExportExcelButton analysis={latestReport.data} />
           </div>

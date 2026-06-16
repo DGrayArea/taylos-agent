@@ -1,12 +1,19 @@
-// src/app/docs/page.tsx
-// Docs page — comprehensive guide to the Taylos Agent platform
-import { DocsPage } from "@/components/docs/DocsPage";
+import { UserDocsPage } from "@/components/docs/UserDocsPage";
+import type { Metadata } from "next";
 
-export const metadata = {
-  title: "Documentation | Taylos Finance",
-  description: "Complete guide to the Taylos Agent platform — API reference, widget embed, webhooks, roles, and features.",
+export const metadata: Metadata = {
+  title: "User Guide",
+  description:
+    "Complete user guide for Taylos — how to upload documents, review anomalies, and manage cases.",
+  alternates: { canonical: "https://taylos-agent.vercel.app/docs" },
+  openGraph: {
+    title: "User Guide | Taylos",
+    description:
+      "Learn how to use Taylos to detect anomalies and manage your financial investigations.",
+    url: "https://taylos-agent.vercel.app/docs",
+  },
 };
 
 export default function Docs() {
-  return <DocsPage />;
+  return <UserDocsPage />;
 }

@@ -356,9 +356,9 @@ export function FinancialReportPDF({ report }: Props) {
   return (
     <Document
       title={`Taylos Financial Review Report — ${refId}`}
-      author="Taylos Finance Platform"
+      author="Taylos"
       subject="Financial Analysis Report"
-      creator="Taylos Finance"
+      creator="Taylos"
     >
       {/* ── Page 1: Cover + Executive Summary ── */}
       <Page size="A4" style={s.page}>
@@ -368,7 +368,7 @@ export function FinancialReportPDF({ report }: Props) {
             <View style={s.headerLogoBox}>
               <Text style={s.headerLogoText}>T</Text>
             </View>
-            <Text style={s.headerBrandName}>Taylos Finance</Text>
+            <Text style={s.headerBrandName}>Taylos</Text>
           </View>
           <Text style={s.headerTitle}>Financial Review Report</Text>
           <Text style={s.headerSubtitle}>
@@ -503,7 +503,7 @@ export function FinancialReportPDF({ report }: Props) {
         {/* Footer */}
         <View style={s.footer} fixed>
           <Text style={s.footerText}>
-            Taylos Finance Platform — Confidential
+            Taylos — Confidential
           </Text>
           <Text style={s.footerText}>
             Generated: {new Date().toLocaleDateString("en-GB")}
@@ -639,7 +639,7 @@ export function FinancialReportPDF({ report }: Props) {
 
           <View style={s.footer} fixed>
             <Text style={s.footerText}>
-              Taylos Finance Platform — Confidential
+              Taylos — Confidential
             </Text>
             <Text style={s.footerText}>
               Generated: {new Date().toLocaleDateString("en-GB")}
@@ -722,7 +722,7 @@ export function FinancialReportPDF({ report }: Props) {
 
           <View style={s.footer} fixed>
             <Text style={s.footerText}>
-              Taylos Finance Platform — Confidential
+              Taylos — Confidential
             </Text>
             <Text style={s.footerText}>
               Generated: {new Date().toLocaleDateString("en-GB")}

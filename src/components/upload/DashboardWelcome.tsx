@@ -20,7 +20,7 @@ export function DashboardWelcome() {
         </div>
         <div>
           <h2 className="text-2xl font-bold mb-2 text-[var(--color-gold-light)]">
-            Welcome to Taylos Finance
+            Welcome to Taylos
           </h2>
           <p className="text-gray-300 leading-relaxed max-w-2xl">
             This platform helps your finance team quickly spot errors, duplicate

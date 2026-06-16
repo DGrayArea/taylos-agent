@@ -47,7 +47,7 @@ export function generateAnomalyEmail(anomaly: Anomaly, caseId: string, accountRe
 <head><meta charset="UTF-8"></head>
 <body style="${BASE_STYLE}">
   <div style="background: #0a1628; padding: 24px 32px; border-radius: 12px 12px 0 0;">
-    <h1 style="color: #d4af37; margin: 0; font-size: 22px;">Taylos Finance</h1>
+    <h1 style="color: #6366f1; margin: 0; font-size: 22px;">Taylos</h1>
     <p style="color: #94a3b8; margin: 4px 0 0; font-size: 14px;">Financial Intelligence Platform</p>
   </div>
 
@@ -84,7 +84,6 @@ export function generateAnomalyEmail(anomaly: Anomaly, caseId: string, accountRe
 
     <div style="margin-top: 32px; padding-top: 24px; border-top: 1px solid #e2e8f0;">
       <p style="color: #94a3b8; font-size: 13px; margin: 0;">
-        This notification was generated automatically by Taylos Finance Platform.
         If you believe this is an error, please contact your compliance team with case reference <strong>${caseId}</strong>.
       </p>
     </div>
@@ -93,7 +92,7 @@ export function generateAnomalyEmail(anomaly: Anomaly, caseId: string, accountRe
 </html>`;
 
   const text = `
-Taylos Finance — ${subject}
+Taylos — ${subject}
 
 Case Reference: ${caseId}
 Severity: ${anomaly.severity}
@@ -109,7 +108,7 @@ Recommended Action:
 ${anomaly.recommended_action ?? "Review the flagged transaction(s) and contact your finance team."}
 
 —
-Taylos Finance Platform. Automated notification — do not reply.
+Taylos — Do not reply.
 `.trim();
 
   return { subject, html, text };
@@ -128,7 +127,7 @@ export function generateResolutionEmail(
 <head><meta charset="UTF-8"></head>
 <body style="${BASE_STYLE}">
   <div style="background: #0a1628; padding: 24px 32px; border-radius: 12px 12px 0 0;">
-    <h1 style="color: #d4af37; margin: 0; font-size: 22px;">Taylos Finance</h1>
+    <h1 style="color: #6366f1; margin: 0; font-size: 22px;">Taylos</h1>
   </div>
   <div style="padding: 32px; border: 1px solid #e2e8f0; border-top: 4px solid #10b981; border-radius: 0 0 12px 12px;">
     <div style="background: #d1fae515; border: 1px solid #10b98130; border-radius: 8px; padding: 16px; margin-bottom: 24px;">

@@ -1,12 +1,22 @@
-// src/app/cases/[id]/page.tsx
-// Feature 10: Case detail view
+import type { Metadata } from "next";
 import { createClient } from "@/lib/supabase/server";
 import { CaseDetail } from "@/components/cases/CaseDetail";
 import { notFound } from "next/navigation";
 
-export const metadata = {
-  title: "Case Detail | Taylos Finance",
-};
+export async function generateMetadata(
+  { params }: { params: Promise<{ id: string }> }
+): Promise<Metadata> {
+  const { id } = await params;
+  const supabase = await createClient();
+  const { data } = await supabase.from("cases").select("title, severity").eq("id", id).maybeSingle();
+  return {
+    title: data?.title ? `${data.title}` : "Case Detail",
+    description: data
+      ? `Investigating ${data.severity} severity anomaly: ${data.title}. Track status, add comments, and resolve the case.`
+      : "View and manage an anomaly investigation case.",
+    robots: { index: false, follow: false },
+  };
+}
 
 export default async function CaseDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;

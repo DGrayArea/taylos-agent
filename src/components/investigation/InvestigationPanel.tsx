@@ -195,7 +195,7 @@ export function InvestigationPanel({ anomaly, investigation }: Props) {
           </Button>
           <div className="flex gap-2">
             <Button variant="secondary" className="flex-1 text-xs py-2">
-              <FileText className="w-3.5 h-3.5 mr-2" /> Download Report
+              <FileText className="w-3.5 h-3.5 mr-2" /> Export Anomalies
             </Button>
           </div>
         </div>

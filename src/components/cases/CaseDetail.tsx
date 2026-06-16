@@ -336,41 +336,30 @@ export function CaseDetail({ caseData: initialCase, anomaly }: Props) {
             </div>
           </div>
 
-          {/* Email Notification */}
+          {/* Email Notification — Coming Soon */}
           {anomaly && caseData.report_id && (
-            <div className="rounded-2xl bg-white/5 border border-white/10 p-5">
-              <h3 className="text-xs text-gray-400 uppercase tracking-wider mb-3 flex items-center gap-2">
-                <Mail className="w-3.5 h-3.5" />
-                Customer Notification
-              </h3>
-              {emailSent ? (
-                <div className="text-green-400 text-sm flex items-center gap-2">
-                  <CheckCircle className="w-4 h-4" />
-                  Email sent successfully
+            <div className="rounded-2xl border border-dashed border-white/10 p-5 relative overflow-hidden">
+              {/* Subtle glow */}
+              <div className="absolute inset-0 bg-gradient-to-br from-[var(--color-gold)]/3 to-transparent pointer-events-none" />
+              <div className="relative">
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="text-xs text-gray-400 uppercase tracking-wider flex items-center gap-2">
+                    <Mail className="w-3.5 h-3.5" />
+                    Customer Notification
+                  </h3>
+                  <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-[var(--color-gold)]/15 text-[var(--color-gold)] border border-[var(--color-gold)]/30">
+                    Coming Soon
+                  </span>
                 </div>
-              ) : (
-                <div className="space-y-2">
-                  <input
-                    value={emailAddress}
-                    onChange={(e) => setEmailAddress(e.target.value)}
-                    placeholder="Recipient email..."
-                    className="w-full bg-black/30 border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-[var(--color-gold)]/50"
-                  />
-                  <button
-                    onClick={loadEmailPreview}
-                    className="w-full px-3 py-2 rounded-xl border border-white/10 text-sm text-gray-300 hover:text-white transition-colors"
-                  >
-                    Preview Email
-                  </button>
-                  <button
-                    onClick={sendEmail}
-                    disabled={isSendingEmail || !emailAddress}
-                    className="w-full px-3 py-2 rounded-xl bg-[var(--color-gold)] text-[var(--color-navy)] font-semibold text-sm disabled:opacity-50 hover:opacity-90 transition-opacity"
-                  >
-                    {isSendingEmail ? "Sending..." : "Send Notification"}
-                  </button>
+                <p className="text-xs text-gray-500 leading-relaxed">
+                  Send plain-language email alerts directly to customers or internal teams when anomalies are detected. Emails will be drafted automatically from the AI findings.
+                </p>
+                <div className="mt-4 space-y-2 opacity-40 pointer-events-none select-none">
+                  <div className="w-full h-8 bg-white/5 rounded-xl border border-white/10" />
+                  <div className="w-full h-8 bg-white/5 rounded-xl border border-white/10" />
+                  <div className="w-full h-8 bg-[var(--color-gold)]/20 rounded-xl" />
                 </div>
-              )}
+              </div>
             </div>
           )}
         </div>

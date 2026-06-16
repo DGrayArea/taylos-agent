@@ -1,11 +1,13 @@
-// src/app/audit/page.tsx
-// Feature 12: Audit Log — admin-only immutable log viewer
+import type { Metadata } from "next";
 import { createClient } from "@/lib/supabase/server";
 import { AuditLogViewer } from "@/components/audit/AuditLogViewer";
 
-export const metadata = {
-  title: "Audit Log | Taylos Finance",
-  description: "Immutable record of all platform actions for regulatory compliance.",
+export const metadata: Metadata = {
+  title: "Audit Log",
+  description:
+    "Immutable, append-only audit trail of every platform action. Search, filter, and export records for regulatory compliance and internal review.",
+  robots: { index: false, follow: false },
+  alternates: { canonical: "https://taylos-agent.vercel.app/audit" },
 };
 
 export default async function AuditPage() {

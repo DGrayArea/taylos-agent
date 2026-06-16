@@ -134,7 +134,7 @@ export function AnalysisReport() {
             ) : (
               <FileDown className="w-4 h-4" />
             )}
-            {pdfLoading ? "Generating PDF..." : "Export PDF Report"}
+            {pdfLoading ? "Generating PDF..." : "Export Anomalies (PDF)"}
           </Button>
           <Button
             variant="secondary"
@@ -147,7 +147,7 @@ export function AnalysisReport() {
             }
           >
             <Table className="w-4 h-4" />
-            Export Excel
+            Export Anomalies (Excel)
           </Button>
           <Button
             variant="secondary"
@@ -160,7 +160,7 @@ export function AnalysisReport() {
             }
           >
             <FileText className="w-4 h-4" />
-            Export JSON
+            Export Anomalies (JSON)
           </Button>
         </div>
       </div>
