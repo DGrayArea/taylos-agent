@@ -7,7 +7,7 @@ export function Header() {
   const { toggle } = useMobileMenu();
 
   return (
-    <header className="h-16 fixed top-0 left-0 lg:left-[var(--sidebar-width,256px)] right-0 z-30 bg-transparent backdrop-blur-xl border-b border-[var(--color-border)] flex items-center justify-between px-4 md:px-6 transition-all duration-300">
+    <header className="h-16 fixed top-0 left-0 lg:left-[var(--sidebar-width,256px)] right-0 z-30 bg-transparent backdrop-blur-xl flex items-center justify-between px-4 md:px-6 transition-all duration-300">
       <div className="flex items-center gap-3 flex-1 min-w-0 mr-4">
         <button onClick={toggle} className="lg:hidden p-2 -ml-2 flex-shrink-0 text-gray-400 hover:text-white">
           <Menu className="w-5 h-5" />

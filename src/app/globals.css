@@ -178,7 +178,10 @@ body {
 @layer base {
   * { @apply border-border outline-ring/50; }
   body { @apply bg-background text-foreground; }
-  html { @apply font-sans; }
+  html {
+    @apply font-sans;
+    font-size: 13px; /* Compact layout density matching 80% zoom scaling */
+  }
 }
 
 @layer utilities {

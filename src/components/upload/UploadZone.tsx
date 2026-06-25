@@ -151,7 +151,7 @@ export function UploadZone() {
 
       <FloatingCard
         className={cn(
-          "border-2 border-dashed transition-all duration-300 cursor-pointer select-none",
+          "border-2 border-dashed transition-all duration-300 cursor-pointer select-none max-w-2xl mx-auto",
           isDragOver
             ? "border-[var(--color-gold)] bg-[var(--color-gold)]/5 shadow-[var(--shadow-glow)]"
             : "border-white/20 hover:border-[var(--color-gold)]/40",
@@ -161,7 +161,7 @@ export function UploadZone() {
         onClick={handleClick}
       >
         <div
-          className="flex flex-col items-center justify-center py-16 px-4 text-center"
+          className="flex flex-col items-center justify-center py-8 px-4 text-center"
           onDragOver={handleDragOver}
           onDragEnter={handleDragOver}
           onDragLeave={handleDragLeave}
@@ -172,25 +172,25 @@ export function UploadZone() {
             <motion.div
               animate={{ rotate: 360 }}
               transition={{ repeat: Infinity, duration: 1, ease: "linear" }}
-              className="w-20 h-20 rounded-full bg-white/5 flex items-center justify-center mb-6 border-t-2 border-[var(--color-gold)]"
+              className="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center mb-3 border-t-2 border-[var(--color-gold)]"
             />
           ) : success ? (
             <motion.div
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
-              className="w-20 h-20 rounded-full bg-[var(--color-success)]/10 flex items-center justify-center mb-6"
+              className="w-12 h-12 rounded-full bg-[var(--color-success)]/10 flex items-center justify-center mb-3"
             >
-              <CheckCircle className="w-10 h-10 text-[var(--color-success)]" />
+              <CheckCircle className="w-6 h-6 text-[var(--color-success)]" />
             </motion.div>
           ) : (
             <motion.div
-              animate={isDragOver ? { y: [0, -10, 0] } : {}}
+              animate={isDragOver ? { y: [0, -6, 0] } : {}}
               transition={{ repeat: Infinity, duration: 1.5 }}
-              className="w-20 h-20 rounded-full bg-white/5 flex items-center justify-center mb-6"
+              className="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center mb-3"
             >
               <UploadCloud
                 className={cn(
-                  "w-10 h-10 transition-colors",
+                  "w-6 h-6 transition-colors",
                   isDragOver ? "text-[var(--color-gold)]" : "text-gray-400",
                 )}
               />
@@ -198,7 +198,7 @@ export function UploadZone() {
           )}
 
           {/* Text */}
-          <h3 className="text-xl font-bold mb-2">
+          <h3 className="text-lg font-bold mb-1">
             {isProcessing
               ? "Reviewing your documents..."
               : success
@@ -207,7 +207,7 @@ export function UploadZone() {
                   ? "Drop your files here"
                   : "Drag files here or click to browse"}
           </h3>
-          <p className="text-gray-400 text-sm mb-6 max-w-md">
+          <p className="text-gray-450 text-xs mb-4 max-w-sm leading-relaxed">
             {isProcessing
               ? "Reading your documents and checking for errors, duplicates, and irregularities — this may take a moment."
               : success
@@ -217,13 +217,13 @@ export function UploadZone() {
 
           {/* Format badges */}
           {!isProcessing && !success && (
-            <div className="flex gap-3 pointer-events-none">
+            <div className="flex gap-2 pointer-events-none">
               {["PDF", "CSV", "Excel", "JSON", "TXT"].map((fmt) => (
                 <div
                   key={fmt}
-                  className="flex items-center gap-1.5 text-xs font-medium text-gray-500 bg-white/5 px-3 py-1.5 rounded-lg border border-white/5"
+                  className="flex items-center gap-1 text-[10px] font-semibold text-gray-500 bg-white/5 px-2 py-1 rounded-lg border border-white/5"
                 >
-                  <FileText className="w-3.5 h-3.5" />
+                  <FileText className="w-3 h-3" />
                   {fmt}
                 </div>
               ))}

@@ -41,9 +41,11 @@ export async function signup(formData: FormData) {
 
 export async function signInWithGoogle() {
   const supabase = await createClient()
-  
-  // Needs absolute URL in server components
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://taylos-agent.vercel.app'
+  const { headers } = await import('next/headers')
+  const headerList = await headers()
+  const host = headerList.get('host')
+  const protocol = host?.startsWith('localhost') || host?.startsWith('127.0.0.1') ? 'http' : 'https'
+  const baseUrl = `${protocol}://${host}`
   const redirectUrl = new URL('/auth/callback', baseUrl).toString()
 
   const { data, error } = await supabase.auth.signInWithOAuth({
@@ -52,6 +54,10 @@ export async function signInWithGoogle() {
       redirectTo: redirectUrl,
     },
   })
+
+  if (error) {
+    redirect('/auth/login?error=' + encodeURIComponent(error.message))
+  }
 
   if (data.url) {
     redirect(data.url)

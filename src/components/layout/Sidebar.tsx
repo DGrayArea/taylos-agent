@@ -53,12 +53,16 @@ export function Sidebar() {
   const pathname = usePathname();
   const { isOpen, setIsOpen } = useMobileMenu();
   const [collapsed, setCollapsed] = useState(false);
+  const [checkingAuth, setCheckingAuth] = useState(true);
   const [userEmail, setUserEmail] = useState<string | null>(null);
 
   useEffect(() => {
     const supabase = createClient();
     supabase.auth.getUser().then(({ data: { user } }) => {
-      if (user) setUserEmail(user.email ?? null);
+      if (user) {
+        setUserEmail(user.email ?? null);
+      }
+      setCheckingAuth(false);
     });
   }, []);
 
@@ -71,14 +75,14 @@ export function Sidebar() {
     const mdMatch = window.matchMedia("(min-width: 768px)");
     
     // On md and above, we have a 16px (1rem) margin on the left.
-    // Expanded sidebar is w-64 (256px), collapsed is w-20 (80px).
+    // Expanded sidebar is w-64 (16rem), collapsed is w-20 (5rem).
     const isMd = mdMatch.matches;
-    const baseWidth = isOpen || !collapsed ? 256 : 80;
-    const totalWidth = isMd ? baseWidth + 16 : baseWidth;
+    const baseWidth = isOpen || !collapsed ? 16 : 5;
+    const totalWidth = isMd ? baseWidth + 1 : baseWidth;
     
     document.documentElement.style.setProperty(
       "--sidebar-width",
-      `${totalWidth}px`
+      `${totalWidth}rem`
     );
   }, [isOpen, collapsed]);
 
@@ -196,20 +200,43 @@ export function Sidebar() {
           {/* User row */}
           {!collapsed && (
             <div className="px-4 py-3 flex items-center gap-3">
-              <div
-                aria-hidden="true"
-                className="w-7 h-7 rounded-full bg-[var(--color-accent)] flex items-center justify-center text-white font-bold text-[11px] flex-shrink-0"
-              >
-                {userEmail ? userEmail[0].toUpperCase() : "U"}
-              </div>
-              <div className="min-w-0 flex-1">
-                <p className="text-xs font-semibold text-white truncate">{userEmail ?? "Loading..."}</p>
-                <form action={logout}>
-                  <button type="submit" className="text-[10px] text-[var(--color-gold-light)] hover:text-white truncate transition-colors text-left">
-                    Sign out
-                  </button>
-                </form>
-              </div>
+              {checkingAuth ? (
+                <div className="min-w-0 flex-1 py-1">
+                  <p className="text-xs text-gray-500 truncate">Checking session...</p>
+                </div>
+              ) : userEmail ? (
+                <>
+                  <div
+                    aria-hidden="true"
+                    className="w-7 h-7 rounded-full bg-[var(--color-accent)] flex items-center justify-center text-white font-bold text-[11px] flex-shrink-0"
+                  >
+                    {userEmail[0].toUpperCase()}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-xs font-semibold text-white truncate">{userEmail}</p>
+                    <form action={logout}>
+                      <button type="submit" className="text-[10px] text-[var(--color-gold-light)] hover:text-white truncate transition-colors text-left">
+                        Sign out
+                      </button>
+                    </form>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div
+                    aria-hidden="true"
+                    className="w-7 h-7 rounded-full bg-white/10 flex items-center justify-center text-gray-400 font-bold text-[11px] flex-shrink-0"
+                  >
+                    G
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-xs font-semibold text-gray-400 truncate">Guest User</p>
+                    <Link href="/auth/login" className="text-[10px] text-[var(--color-gold-light)] hover:text-white truncate transition-colors text-left block">
+                      Sign in
+                    </Link>
+                  </div>
+                </>
+              )}
             </div>
           )}
 

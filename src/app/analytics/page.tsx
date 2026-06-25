@@ -16,16 +16,19 @@ export const metadata: Metadata = {
 
 export default async function AnalyticsPage() {
   const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
 
   const { data: reports } = await supabase
     .from("reports")
     .select("id, created_at, issues, documents, status, data")
+    .eq("user_id", user?.id)
     .order("created_at", { ascending: false })
     .limit(100);
 
   const { data: cases } = await supabase
     .from("cases")
     .select("id, status, severity, created_at")
+    .eq("user_id", user?.id)
     .order("created_at", { ascending: false })
     .limit(200);
 

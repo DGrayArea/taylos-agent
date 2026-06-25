@@ -21,8 +21,15 @@ export async function generateMetadata(
 export default async function CaseDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
 
-  const { data: caseData } = await supabase.from("cases").select("*").eq("id", id).maybeSingle();
+  const { data: caseData } = await supabase
+    .from("cases")
+    .select("*")
+    .eq("id", id)
+    .eq("user_id", user?.id)
+    .maybeSingle();
+
   if (!caseData) notFound();
 
   // Fetch associated report if linked
@@ -32,6 +39,7 @@ export default async function CaseDetailPage({ params }: { params: Promise<{ id:
       .from("reports")
       .select("data")
       .eq("id", caseData.report_id)
+      .eq("user_id", user?.id)
       .maybeSingle();
     anomaly =
       (report?.data?.feature_2_anomalies?.anomaly_list ?? []).find(

@@ -11,11 +11,13 @@ export const metadata: Metadata = {
 
 export default async function MonitorPage() {
   const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
 
   // Pull all reports for aggregate stats
   const { data: allReports } = await supabase
     .from("reports")
     .select("id, created_at, documents, issues, data")
+    .eq("user_id", user?.id)
     .order("created_at", { ascending: false })
     .limit(50);
 

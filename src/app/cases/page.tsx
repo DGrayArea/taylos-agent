@@ -16,16 +16,19 @@ export const metadata: Metadata = {
 
 export default async function CasesPage() {
   const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
 
   const { data: cases } = await supabase
     .from("cases")
     .select("*")
+    .eq("user_id", user?.id)
     .order("created_at", { ascending: false })
     .limit(200);
 
   const { data: reports } = await supabase
     .from("reports")
     .select("id, created_at, data")
+    .eq("user_id", user?.id)
     .order("created_at", { ascending: false })
     .limit(10);
 

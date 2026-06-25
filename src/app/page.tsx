@@ -6,6 +6,7 @@ import { DashboardWelcome } from "@/components/upload/DashboardWelcome";
 import { AnalysisChartsPanel } from "@/components/charts/AnalysisCharts";
 import { DocumentChat } from "@/components/chat/DocumentChat";
 import { ExportExcelButton } from "@/components/upload/ExportExcelButton";
+import { PublicOverview } from "@/components/layout/PublicOverview";
 import Link from "next/link";
 
 export const metadata: Metadata = {
@@ -22,11 +23,17 @@ export const metadata: Metadata = {
 
 export default async function Dashboard() {
   const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  if (!user) {
+    return <PublicOverview />;
+  }
 
   // Fetch the most recent completed report
   const { data: latestReport } = await supabase
     .from("reports")
     .select("*")
+    .eq("user_id", user.id)
     .order("created_at", { ascending: false })
     .limit(1)
     .maybeSingle();
@@ -35,6 +42,7 @@ export default async function Dashboard() {
   const { data: allReports } = await supabase
     .from("reports")
     .select("id, issues, documents")
+    .eq("user_id", user.id)
     .order("created_at", { ascending: false })
     .limit(100);
 

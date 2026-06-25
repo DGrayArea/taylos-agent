@@ -10,7 +10,7 @@ import { FileText, Shield, Zap } from "lucide-react";
 
 export default function UploadPage() {
   return (
-    <div className="p-4 md:p-8 max-w-7xl mx-auto space-y-10 md:space-y-16 pb-24 overflow-x-hidden">
+    <div className="p-4 md:py-6 md:px-8 max-w-4xl mx-auto space-y-6 pb-12 overflow-x-hidden">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
