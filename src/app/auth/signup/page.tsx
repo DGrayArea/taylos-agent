@@ -15,6 +15,8 @@ function SignupForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
   const [isHovered, setIsHovered] = useState(false);
   const [coords, setCoords] = useState({ x: 0, y: 0 });
 
@@ -95,6 +97,40 @@ function SignupForm() {
         )}
 
         <form className="space-y-4 relative" action={signup}>
+          {/* Name Row */}
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1.5">
+              <label htmlFor="firstName" className="text-[10px] font-semibold text-gray-450 uppercase tracking-wider block">
+                First Name
+              </label>
+              <input
+                id="firstName"
+                name="firstName"
+                type="text"
+                required
+                value={firstName}
+                onChange={(e) => setFirstName(e.target.value)}
+                className="w-full rounded-xl bg-white/[0.02] border border-white/10 px-3.5 py-2.5 text-white placeholder-gray-600 focus:outline-none focus:border-[var(--color-accent)] focus:ring-1 focus:ring-[var(--color-accent)] text-xs transition-all duration-300"
+                placeholder="Jane"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <label htmlFor="lastName" className="text-[10px] font-semibold text-gray-450 uppercase tracking-wider block">
+                Last Name
+              </label>
+              <input
+                id="lastName"
+                name="lastName"
+                type="text"
+                required
+                value={lastName}
+                onChange={(e) => setLastName(e.target.value)}
+                className="w-full rounded-xl bg-white/[0.02] border border-white/10 px-3.5 py-2.5 text-white placeholder-gray-600 focus:outline-none focus:border-[var(--color-accent)] focus:ring-1 focus:ring-[var(--color-accent)] text-xs transition-all duration-300"
+                placeholder="Doe"
+              />
+            </div>
+          </div>
+
           {/* Email input */}
           <div className="space-y-1.5">
             <label htmlFor="email" className="text-[10px] font-semibold text-gray-450 uppercase tracking-wider block">

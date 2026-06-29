@@ -1,13 +1,14 @@
 import type { Metadata } from "next";
 import { createClient } from "@/lib/supabase/server";
-import { AnomalyOverview } from "@/components/anomalies/AnomalyOverview";
-import { AnomalyList } from "@/components/anomalies/AnomalyList";
-import { DashboardWelcome } from "@/components/upload/DashboardWelcome";
-import { AnalysisChartsPanel } from "@/components/charts/AnalysisCharts";
-import { DocumentChat } from "@/components/chat/DocumentChat";
-import { ExportExcelButton } from "@/components/upload/ExportExcelButton";
+import { getUserRole } from "@/lib/rbac";
 import { PublicOverview } from "@/components/layout/PublicOverview";
+import { GlobalAdminDashboard } from "@/components/admin/GlobalAdminDashboard";
+import { OrgAdminDashboard } from "@/components/org/OrgAdminDashboard";
+import { AnalystDashboard } from "@/components/org/AnalystDashboard";
+import { AuditorDashboard } from "@/components/org/AuditorDashboard";
+import { ShieldAlert, Building, LogOut, ArrowRight } from "lucide-react";
 import Link from "next/link";
+import { logout } from "./auth/actions";
 
 export const metadata: Metadata = {
   title: "Dashboard",
@@ -29,139 +30,114 @@ export default async function Dashboard() {
     return <PublicOverview />;
   }
 
-  // Fetch the most recent completed report
-  const { data: latestReport } = await supabase
-    .from("reports")
-    .select("*")
-    .eq("user_id", user.id)
-    .order("created_at", { ascending: false })
-    .limit(1)
-    .maybeSingle();
+  const { role, org_id, org_name, status, org_status } = await getUserRole(user.id);
 
-  // Fetch quick stats: total reports + total issues
-  const { data: allReports } = await supabase
-    .from("reports")
-    .select("id, issues, documents")
-    .eq("user_id", user.id)
-    .order("created_at", { ascending: false })
-    .limit(100);
+  // 1. Check User/Org Suspensions
+  if (status === "suspended") {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-[#07080d] px-4 text-center">
+        <div className="w-full max-w-[420px] bg-white/[0.02] border border-rose-500/20 rounded-3xl p-8 space-y-6 shadow-2xl">
+          <div className="w-14 h-14 rounded-full bg-rose-500/10 flex items-center justify-center text-rose-500 mx-auto border border-rose-500/20 animate-pulse">
+            <ShieldAlert className="w-7 h-7" />
+          </div>
+          <h2 className="text-2xl font-bold text-white tracking-tight">Account Suspended</h2>
+          <p className="text-xs text-gray-400 leading-relaxed">
+            Your personal user account has been suspended by your organisation administrator. 
+            Please contact your compliance team or administrator to resolve this issue.
+          </p>
+          <form action={logout}>
+            <button type="submit" className="w-full py-2.5 rounded-xl bg-white/5 border border-white/10 text-xs font-semibold text-white hover:bg-white/10 transition-all flex items-center justify-center gap-2 cursor-pointer">
+              <LogOut className="w-4 h-4" />
+              Sign Out
+            </button>
+          </form>
+        </div>
+      </div>
+    );
+  }
 
-  const hasData = !!latestReport;
+  if (org_status === "suspended") {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-[#07080d] px-4 text-center">
+        <div className="w-full max-w-[420px] bg-white/[0.02] border border-rose-500/20 rounded-3xl p-8 space-y-6 shadow-2xl">
+          <div className="w-14 h-14 rounded-full bg-rose-500/10 flex items-center justify-center text-rose-500 mx-auto border border-rose-500/20 animate-pulse">
+            <ShieldAlert className="w-7 h-7" />
+          </div>
+          <h2 className="text-2xl font-bold text-white tracking-tight">Workspace Suspended</h2>
+          <p className="text-xs text-gray-400 leading-relaxed">
+            The workspace for <span className="text-white font-bold">{org_name}</span> has been suspended by the platform administrator. 
+            All actions, API endpoints, and member accesses have been frozen.
+          </p>
+          <form action={logout}>
+            <button type="submit" className="w-full py-2.5 rounded-xl bg-white/5 border border-white/10 text-xs font-semibold text-white hover:bg-white/10 transition-all flex items-center justify-center gap-2 cursor-pointer">
+              <LogOut className="w-4 h-4" />
+              Sign Out
+            </button>
+          </form>
+        </div>
+      </div>
+    );
+  }
 
-  const anomalyStats = hasData
-    ? {
-        critical:
-          latestReport.data?.feature_2_anomalies?.anomalies_by_severity?.critical ?? 0,
-        high:
-          latestReport.data?.feature_2_anomalies?.anomalies_by_severity?.high ?? 0,
-        medium:
-          latestReport.data?.feature_2_anomalies?.anomalies_by_severity?.medium ?? 0,
-        low:
-          latestReport.data?.feature_2_anomalies?.anomalies_by_severity?.low ?? 0,
-        totalRecords:
-          latestReport.data?.analysis_metadata?.total_transactions_analyzed ?? 0,
-        documentCount: latestReport.documents ?? 0,
-        reportDate: latestReport.created_at,
-      }
-    : null;
+  // 2. Route based on RBAC Role
+  if (role === "global_admin") {
+    return <GlobalAdminDashboard />;
+  }
 
-  const anomalyList = hasData
-    ? (latestReport.data?.feature_2_anomalies?.anomaly_list ?? [])
-    : [];
+  if (role === "org_admin" && org_id) {
+    return <OrgAdminDashboard orgId={org_id} orgName={org_name || "Organisation"} />;
+  }
 
-  const totalReports = allReports?.length ?? 0;
-  const totalIssues = allReports?.reduce((s, r) => s + (r.issues ?? 0), 0) ?? 0;
-  const totalDocs = allReports?.reduce((s, r) => s + (r.documents ?? 0), 0) ?? 0;
+  if (role === "analyst" && org_id) {
+    return <AnalystDashboard orgId={org_id} orgName={org_name || "Organisation"} />;
+  }
 
-  const spendingByCategory = latestReport?.data?.spending_by_category;
-  const monthlyTrend = latestReport?.data?.monthly_trend;
+  if (role === "auditor" && org_id) {
+    return <AuditorDashboard orgId={org_id} orgName={org_name || "Organisation"} />;
+  }
 
+  // 3. User logged in but no organisation context (Onboarding)
   return (
-    <div className="p-4 md:p-8 max-w-7xl mx-auto space-y-10 md:space-y-14 pb-24 overflow-x-hidden">
-      {/* Page Header */}
-      <div className="flex flex-col md:flex-row items-start md:items-end justify-between gap-4">
-        <div>
-          <h1 className="text-3xl md:text-4xl font-bold mb-2">
-            Financial Review Dashboard
-          </h1>
-          <p className="text-gray-400 text-sm md:text-base">
-            {hasData
-              ? `Showing results from your most recent review — ${new Date(
-                  latestReport.created_at,
-                ).toLocaleDateString("en-GB", {
-                  day: "numeric",
-                  month: "long",
-                  year: "numeric",
-                })}`
-              : "Upload financial documents to check for errors, duplicates, and irregularities."}
+    <div className="min-h-screen flex items-center justify-center bg-[#07080d] px-4 text-center relative overflow-hidden">
+      <div className="absolute inset-0 bg-grid-white/[0.01] bg-[size:30px_30px]" />
+      <div className="absolute top-[-10%] left-[-10%] w-[50vw] h-[50vw] rounded-full bg-indigo-500/5 blur-[130px] pointer-events-none" />
+      <div className="absolute bottom-[-10%] right-[-10%] w-[45vw] h-[45vw] rounded-full bg-amber-500/5 blur-[130px] pointer-events-none" />
+
+      <div className="w-full max-w-[420px] relative z-10 bg-white/[0.02] backdrop-blur-2xl border border-white/10 rounded-3xl p-6 md:p-8 space-y-6 shadow-2xl">
+        <div className="w-12 h-12 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400 mx-auto">
+          <Building className="w-6 h-6" />
+        </div>
+        
+        <div className="space-y-2">
+          <h2 className="text-2xl font-bold text-white tracking-tight">Welcome to Taylos</h2>
+          <p className="text-xs text-gray-400 leading-relaxed">
+            Your account is verified, but you are not yet associated with any organisation workspace.
           </p>
         </div>
-        {hasData && (
-          <div className="flex gap-3 flex-wrap">
-            <Link
-              href="/history"
-              className="px-4 py-2 rounded-xl border border-white/10 text-gray-300 hover:text-white hover:border-white/30 text-sm transition-colors"
-            >
-              View All Reports
-            </Link>
-            <ExportExcelButton analysis={latestReport.data} />
-          </div>
-        )}
-      </div>
 
-      {/* All-time stats row — only when there is data */}
-      {hasData && totalReports > 0 && (
-        <div className="grid grid-cols-3 gap-4">
-          {[
-            { label: "Total Reviews", value: totalReports },
-            { label: "Documents Analysed", value: totalDocs },
-            { label: "Total Issues Found", value: totalIssues, red: totalIssues > 0 },
-          ].map((stat, i) => (
-            <div
-              key={i}
-              className="rounded-2xl bg-white/5 border border-white/10 p-5"
-            >
-              <div className="text-xs text-gray-500 uppercase tracking-wider mb-1">{stat.label}</div>
-              <div className={`text-2xl font-bold ${stat.red ? "text-[var(--color-critical)]" : "text-white"}`}>
-                {stat.value}
-              </div>
-            </div>
-          ))}
+        <div className="space-y-3 pt-2">
+          <Link
+            href="/auth/register-org"
+            className="w-full flex items-center justify-between py-2.5 px-4 rounded-xl text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-500 transition-all cursor-pointer"
+          >
+            Create New Organisation
+            <ArrowRight className="w-4.5 h-4.5" />
+          </Link>
+          
+          <div className="p-3 bg-white/[0.01] border border-white/5 rounded-xl text-left text-gray-400 leading-relaxed text-[11px]">
+            💡 **Have an invite?** Ask your administrator to invite your email address. Once invited, click the email onboarding link to join.
+          </div>
         </div>
-      )}
 
-      {/* No data yet — show welcome/onboarding */}
-      {!hasData && <DashboardWelcome />}
-
-      {/* Issues Found in Your Documents */}
-      {hasData && (
-        <section className="relative space-y-8">
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[400px] bg-[var(--color-critical)]/5 rounded-full blur-[120px] pointer-events-none" />
-
-          <div className="relative z-10">
-            <h2 className="text-2xl font-bold mb-1">Issues Found in Your Documents</h2>
-            <p className="text-gray-400 text-sm">
-              From your most recent review — {new Date(latestReport.created_at).toLocaleString("en-GB", { day: "numeric", month: "long", year: "numeric", hour: "2-digit", minute: "2-digit" })}
-            </p>
-          </div>
-
-          <AnomalyOverview stats={anomalyStats} />
-
-          {/* Charts */}
-          <AnalysisChartsPanel
-            anomaliesBySeverity={anomalyStats ?? undefined}
-            spendingByCategory={spendingByCategory}
-            monthlyTrend={monthlyTrend}
-          />
-
-          <AnomalyList anomalies={anomalyList} />
-
-          {/* Chat with Document */}
-          <div className="mt-8">
-            <DocumentChat analysisContext={latestReport.data} />
-          </div>
-        </section>
-      )}
+        <div className="border-t border-white/5 pt-4">
+          <form action={logout}>
+            <button type="submit" className="w-full py-2 rounded-xl bg-white/5 border border-white/10 text-xs font-semibold text-gray-300 hover:text-white hover:bg-white/10 transition-all flex items-center justify-center gap-2 cursor-pointer">
+              <LogOut className="w-3.5 h-3.5" />
+              Sign Out
+            </button>
+          </form>
+        </div>
+      </div>
     </div>
   );
 }

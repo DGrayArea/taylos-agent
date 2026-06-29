@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { createClient } from "@/lib/supabase/server";
 import { CasesList } from "@/components/cases/CasesList";
+import { getUserRole } from "@/lib/rbac";
 
 export const metadata: Metadata = {
   title: "Cases",
@@ -18,19 +19,30 @@ export default async function CasesPage() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
-  const { data: cases } = await supabase
-    .from("cases")
-    .select("*")
-    .eq("user_id", user?.id)
+  if (!user) {
+    return null;
+  }
+
+  const { role, org_id } = await getUserRole(user.id);
+
+  let casesQuery = supabase.from("cases").select("*");
+  let reportsQuery = supabase.from("reports").select("id, created_at, data");
+
+  if (role !== "global_admin" && org_id) {
+    casesQuery = casesQuery.eq("org_id", org_id);
+    reportsQuery = reportsQuery.eq("org_id", org_id);
+  } else {
+    casesQuery = casesQuery.eq("user_id", user.id);
+    reportsQuery = reportsQuery.eq("user_id", user.id);
+  }
+
+  const { data: cases } = await casesQuery
     .order("created_at", { ascending: false })
     .limit(200);
 
-  const { data: reports } = await supabase
-    .from("reports")
-    .select("id, created_at, data")
-    .eq("user_id", user?.id)
+  const { data: reports } = await reportsQuery
     .order("created_at", { ascending: false })
     .limit(10);
 
-  return <CasesList initialCases={cases ?? []} reports={reports ?? []} />;
+  return <CasesList initialCases={cases ?? []} reports={reports ?? []} userRole={role || undefined} />;
 }

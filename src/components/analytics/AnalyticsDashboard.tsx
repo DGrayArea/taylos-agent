@@ -3,9 +3,9 @@
 import { useState, useEffect, useCallback } from "react";
 import {
   AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
-  ResponsiveContainer, PieChart, Pie, Cell, Legend,
+  ResponsiveContainer, PieChart, Pie, Cell, Legend, LineChart, Line,
 } from "recharts";
-import { TrendingUp, AlertTriangle, CheckCircle, FileText, RefreshCw, Activity } from "lucide-react";
+import { TrendingUp, AlertTriangle, CheckCircle, FileText, RefreshCw, Activity, Users, Clock } from "lucide-react";
 import { ComprehensiveAnalysis } from "@/lib/types";
 
 interface ReportRow {
@@ -27,6 +27,10 @@ interface CaseRow {
 interface Props {
   reports: ReportRow[];
   cases: CaseRow[];
+  activeMembersCount?: number;
+  suspendedMembersCount?: number;
+  openDeadlinesCount?: number;
+  caseActivityData?: { date: string; opened: number; resolved: number }[];
 }
 
 const COLORS = {
@@ -40,7 +44,14 @@ const COLORS = {
 
 const SEVERITY_COLORS = [COLORS.critical, COLORS.high, COLORS.medium, COLORS.low, COLORS.success];
 
-export function AnalyticsDashboard({ reports, cases }: Props) {
+export function AnalyticsDashboard({
+  reports,
+  cases,
+  activeMembersCount = 0,
+  suspendedMembersCount = 0,
+  openDeadlinesCount = 0,
+  caseActivityData = []
+}: Props) {
   const [liveTime, setLiveTime] = useState(new Date());
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
 
@@ -125,31 +136,48 @@ export function AnalyticsDashboard({ reports, cases }: Props) {
   const statCards = [
     {
       icon: FileText,
-      label: "Total Reviews",
-      value: totalReports,
-      sub: `${totalDocs} documents analysed`,
+      label: "TOTAL CASES",
+      value: totalCases,
+      sub: "Cases in this organisation",
       color: COLORS.gold,
     },
     {
       icon: AlertTriangle,
-      label: "Total Anomalies",
+      label: "TOTAL ANOMALIES",
       value: totalAnomalies,
       sub: `${severityTotals.critical} critical`,
       color: COLORS.critical,
     },
     {
       icon: TrendingUp,
-      label: "Avg Confidence",
+      label: "AVG CONFIDENCE",
       value: `${avgConfidence}%`,
       sub: "AI classification confidence",
       color: COLORS.success,
     },
     {
       icon: CheckCircle,
-      label: "Resolution Rate",
+      label: "RESOLUTION RATE",
       value: `${resolutionRate}%`,
       sub: `${resolvedCases} of ${totalCases} cases`,
       color: COLORS.success,
+    },
+  ];
+
+  const secondaryStatCards = [
+    {
+      icon: Users,
+      label: "TEAM MEMBERS",
+      value: activeMembersCount + suspendedMembersCount,
+      sub: `${activeMembersCount} active, ${suspendedMembersCount} suspended`,
+      color: "#3b82f6",
+    },
+    {
+      icon: Clock,
+      label: "OPEN DEADLINES",
+      value: openDeadlinesCount,
+      sub: `${openDeadlinesCount} cases approaching deadline`,
+      color: "#f97316",
     },
   ];
 
@@ -165,29 +193,50 @@ export function AnalyticsDashboard({ reports, cases }: Props) {
           </p>
         </div>
         <div className="flex items-center gap-2 text-xs text-gray-500">
-          <RefreshCw className="w-3 h-3" />
+          <RefreshCw className="w-3.5 h-3.5" />
           Updates every second
         </div>
       </div>
 
       {/* Stat Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        {statCards.map((stat, i) => (
-          <div
-            key={i}
-            className="rounded-2xl bg-white/5 border border-white/10 p-5 hover:bg-white/8 transition-all group"
-            style={{ borderTop: `3px solid ${stat.color}` }}
-          >
-            <div className="flex items-start justify-between mb-3">
-              <stat.icon className="w-5 h-5 mt-0.5" style={{ color: stat.color }} />
+      <div className="space-y-4">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          {statCards.map((stat, i) => (
+            <div
+              key={i}
+              className="rounded-2xl bg-white/5 border border-white/10 p-5 hover:bg-white/8 transition-all group"
+              style={{ borderTop: `3px solid ${stat.color}` }}
+            >
+              <div className="flex items-start justify-between mb-3">
+                <stat.icon className="w-5 h-5 mt-0.5" style={{ color: stat.color }} />
+              </div>
+              <div className="text-2xl md:text-3xl font-bold mb-1" style={{ color: stat.color }}>
+                {stat.value}
+              </div>
+              <div className="text-xs text-gray-400 font-medium uppercase tracking-wider">{stat.label}</div>
+              <div className="text-xs text-gray-600 mt-1">{stat.sub}</div>
             </div>
-            <div className="text-2xl md:text-3xl font-bold mb-1" style={{ color: stat.color }}>
-              {stat.value}
+          ))}
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {secondaryStatCards.map((stat, i) => (
+            <div
+              key={i}
+              className="rounded-2xl bg-white/5 border border-white/10 p-5 hover:bg-white/8 transition-all group"
+              style={{ borderTop: `3px solid ${stat.color}` }}
+            >
+              <div className="flex items-start justify-between mb-3">
+                <stat.icon className="w-5 h-5 mt-0.5" style={{ color: stat.color }} />
+              </div>
+              <div className="text-2xl md:text-3xl font-bold mb-1" style={{ color: stat.color }}>
+                {stat.value}
+              </div>
+              <div className="text-xs text-gray-400 font-medium uppercase tracking-wider">{stat.label}</div>
+              <div className="text-xs text-gray-650 mt-1">{stat.sub}</div>
             </div>
-            <div className="text-xs text-gray-400 font-medium uppercase tracking-wider">{stat.label}</div>
-            <div className="text-xs text-gray-600 mt-1">{stat.sub}</div>
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
 
       {/* Charts Row 1 */}
@@ -219,7 +268,7 @@ export function AnalyticsDashboard({ reports, cases }: Props) {
             </ResponsiveContainer>
           ) : (
             <div className="h-[200px] flex items-center justify-center text-gray-500 text-sm">
-              No data yet — upload documents to see trends
+              No anomaly trends data yet
             </div>
           )}
         </div>
@@ -315,6 +364,30 @@ export function AnalyticsDashboard({ reports, cases }: Props) {
         </div>
       </div>
 
+      {/* Case Activity Panel */}
+      <div className="rounded-2xl bg-white/5 border border-white/10 p-6">
+        <h2 className="font-semibold text-white mb-6">CASE ACTIVITY</h2>
+        {caseActivityData.length > 0 ? (
+          <ResponsiveContainer width="100%" height={240}>
+            <LineChart data={caseActivityData}>
+              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
+              <XAxis dataKey="date" tick={{ fill: "#6b7280", fontSize: 11 }} />
+              <YAxis tick={{ fill: "#6b7280", fontSize: 11 }} />
+              <Tooltip
+                contentStyle={{ background: "#111827", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 8, color: "#fff" }}
+              />
+              <Legend iconType="circle" iconSize={8} />
+              <Line type="monotone" dataKey="Opened" stroke="#3b82f6" strokeWidth={2} activeDot={{ r: 8 }} />
+              <Line type="monotone" dataKey="Resolved" stroke="#10b981" strokeWidth={2} />
+            </LineChart>
+          </ResponsiveContainer>
+        ) : (
+          <div className="h-[240px] flex items-center justify-center text-gray-500 text-sm">
+            No case activity yet
+          </div>
+        )}
+      </div>
+
       {/* Recent Reports Table */}
       <div className="rounded-2xl bg-white/5 border border-white/10 overflow-hidden">
         <div className="p-6 border-b border-white/10">
@@ -358,7 +431,7 @@ export function AnalyticsDashboard({ reports, cases }: Props) {
               {reports.length === 0 && (
                 <tr>
                   <td colSpan={5} className="px-6 py-12 text-center text-gray-500">
-                    No reports yet — upload your first document to begin.
+                    No reports found.
                   </td>
                 </tr>
               )}

@@ -4,7 +4,7 @@ import { cn } from "@/lib/utils";
 import {
   LayoutDashboard, UploadCloud, History, HelpCircle, Shield,
   Activity, BarChart3, FolderOpen, Layers, Lock, Book, Code,
-  ChevronLeft, ChevronRight,
+  ChevronLeft, ChevronRight, User, Users, LifeBuoy, Clock
 } from "lucide-react";
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
@@ -12,38 +12,60 @@ import { usePathname } from "next/navigation";
 import { useMobileMenu } from "@/lib/MobileMenuContext";
 import { createClient } from "@/lib/supabase/client";
 import { logout } from "@/app/auth/actions";
+import { Role } from "@/lib/rbac";
+import { getCurrentUserRole } from "@/app/auth/actions";
+
+interface NavItem {
+  icon: any;
+  label: string;
+  href: string;
+  roles: string[];
+  soon?: boolean;
+  authenticatedOnly?: boolean;
+}
+
+interface NavGroup {
+  label: string;
+  items: NavItem[];
+}
 
 // ─── Nav structure ─────────────────────────────────────────────
-const navGroups = [
+const navGroups: NavGroup[] = [
   {
-    label: "Core",
+    label: "Navigation",
     items: [
-      { icon: LayoutDashboard, label: "Dashboard",       href: "/" },
-      { icon: UploadCloud,    label: "Upload",           href: "/upload" },
-      { icon: Activity,       label: "Live Monitor",     href: "/monitor",   soon: true },
+      { icon: FolderOpen, label: "Cases",          href: "/cases", roles: ["global_admin", "org_admin", "analyst", "auditor"] },
+      { icon: History,    label: "Review History", href: "/history", roles: ["global_admin", "org_admin", "analyst", "auditor"] },
     ],
   },
   {
-    label: "Analysis",
+    label: "Integrations",
     items: [
-      { icon: BarChart3,  label: "Analytics",     href: "/analytics" },
-      { icon: FolderOpen, label: "Cases",          href: "/cases" },
-      { icon: Layers,     label: "Batch Jobs",     href: "/batch" },
-      { icon: History,    label: "Review History", href: "/history" },
+      { icon: Code,       label: "APIs",     href: "/integrations/api", roles: ["org_admin"] },
+      { icon: Layers,     label: "Plugins",  href: "/integrations/plugins", roles: ["org_admin"] },
     ],
   },
   {
     label: "Admin",
     items: [
-      { icon: Lock,       label: "Audit Log", href: "/audit" },
-      { icon: Code,       label: "API Keys",  href: "/settings" },
+      { icon: Lock,       label: "Audit Log",       href: "/audit", roles: ["org_admin", "auditor"] },
+      { icon: Users,      label: "Team & Members",  href: "/team", roles: ["org_admin"] },
+      { icon: LifeBuoy,   label: "Support",         href: "/support", roles: ["org_admin"] },
+      { icon: Clock,      label: "Deadlines",       href: "/deadlines", roles: ["org_admin"] },
+      { icon: Shield,     label: "Manage Global admin", href: "/admin", roles: ["global_admin"] },
+    ],
+  },
+  {
+    label: "Account",
+    items: [
+      { icon: User,       label: "Profile",       href: "/profile", authenticatedOnly: true, roles: ["global_admin", "org_admin", "analyst", "auditor"] },
     ],
   },
   {
     label: "Resources",
     items: [
-      { icon: Book,       label: "Documentation", href: "/docs" },
-      { icon: HelpCircle, label: "Help",           href: "/help" },
+      { icon: Book,       label: "Documentation", href: "/docs", roles: ["global_admin", "org_admin", "analyst", "auditor"] },
+      { icon: HelpCircle, label: "Help",           href: "/help", roles: ["global_admin", "org_admin", "analyst", "auditor"] },
     ],
   },
 ];
@@ -55,12 +77,38 @@ export function Sidebar() {
   const [collapsed, setCollapsed] = useState(false);
   const [checkingAuth, setCheckingAuth] = useState(true);
   const [userEmail, setUserEmail] = useState<string | null>(null);
+  const [userAvatar, setUserAvatar] = useState<string | null>(null);
+  const [userInitials, setUserInitials] = useState<string>("U");
+  const [userRole, setUserRole] = useState<Role | null>(null);
 
   useEffect(() => {
     const supabase = createClient();
-    supabase.auth.getUser().then(({ data: { user } }) => {
+    supabase.auth.getUser().then(async ({ data: { user } }) => {
       if (user) {
         setUserEmail(user.email ?? null);
+        const meta = user.user_metadata || {};
+        setUserAvatar(meta.avatar_url ?? null);
+
+        let initials = "";
+        if (meta.first_name) {
+          initials = meta.first_name[0];
+          if (meta.last_name) initials += meta.last_name[0];
+        } else if (meta.full_name) {
+          const parts = meta.full_name.trim().split(/\s+/);
+          initials = parts[0][0];
+          if (parts.length > 1) initials += parts[1][0];
+        } else if (user.email) {
+          initials = user.email[0];
+        }
+        setUserInitials(initials.toUpperCase() || "U");
+
+        // Fetch resolved user role via server action
+        try {
+          const { role } = await getCurrentUserRole();
+          setUserRole(role);
+        } catch (err) {
+          console.error("Error checking user role in sidebar:", err);
+        }
       }
       setCheckingAuth(false);
     });
@@ -73,13 +121,10 @@ export function Sidebar() {
 
   useEffect(() => {
     const mdMatch = window.matchMedia("(min-width: 768px)");
-    
-    // On md and above, we have a 16px (1rem) margin on the left.
-    // Expanded sidebar is w-64 (16rem), collapsed is w-20 (5rem).
     const isMd = mdMatch.matches;
     const baseWidth = isOpen || !collapsed ? 16 : 5;
     const totalWidth = isMd ? baseWidth + 1 : baseWidth;
-    
+
     document.documentElement.style.setProperty(
       "--sidebar-width",
       `${totalWidth}rem`
@@ -92,6 +137,19 @@ export function Sidebar() {
       return !prev;
     });
   };
+
+  // Filter nav groups dynamically based on role
+  const displayedGroups = navGroups.map(group => {
+    const items = group.items.filter(item => {
+      if (item.authenticatedOnly && !userEmail) return false;
+      if (!userRole) {
+        // Unauthenticated or onboarding accounts only see basic links
+        return item.href === "/" || item.href === "/docs" || item.href === "/help";
+      }
+      return item.roles.includes(userRole);
+    });
+    return { ...group, items };
+  }).filter(group => group.items.length > 0);
 
   return (
     <>
@@ -138,7 +196,7 @@ export function Sidebar() {
 
         {/* ── Navigation ─────────────────────────────────── */}
         <nav className="flex-1 overflow-y-auto py-4 px-2 flex flex-col gap-4" aria-label="Main navigation">
-          {navGroups.map((group) => (
+          {displayedGroups.map((group) => (
             <div key={group.label}>
               {/* Section label — hidden when collapsed */}
               {!collapsed && (
@@ -148,6 +206,7 @@ export function Sidebar() {
               )}
               <div className="flex flex-col gap-0.5">
                 {group.items.map((item) => {
+                  if (item.authenticatedOnly && !userEmail) return null;
                   const isActive = pathname === item.href;
                   return (
                     <Link
@@ -190,64 +249,69 @@ export function Sidebar() {
                     </Link>
                   );
                 })}
+
+                {/* Render the user info row directly under the Account section label/items */}
+                {group.label === "Account" && !collapsed && (
+                  <div className="px-3 py-2.5 mx-1 rounded-xl bg-white/[0.02] border border-white/5 flex items-center gap-3 mt-1.5 shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)]">
+                    {checkingAuth ? (
+                      <div className="min-w-0 flex-1 py-1">
+                        <p className="text-xs text-gray-500 animate-pulse">Checking session...</p>
+                      </div>
+                    ) : userEmail ? (
+                      <>
+                        {userAvatar ? (
+                          <img
+                            src={userAvatar}
+                            alt="User avatar"
+                            className="w-7 h-7 rounded-full object-cover flex-shrink-0 border border-white/10"
+                          />
+                        ) : (
+                          <div
+                            aria-hidden="true"
+                            className="w-7 h-7 rounded-full bg-[var(--color-accent)] flex items-center justify-center text-white font-bold text-[11px] flex-shrink-0"
+                          >
+                            {userInitials}
+                          </div>
+                        )}
+                        <div className="min-w-0 flex-1 text-left">
+                          <p className="text-xs font-semibold text-white truncate leading-tight">{userEmail}</p>
+                          <form action={logout} className="mt-0.5">
+                            <button type="submit" className="text-[10px] text-[var(--color-gold-light)] hover:text-white truncate transition-colors text-left">
+                              Sign out
+                            </button>
+                          </form>
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        <div
+                          aria-hidden="true"
+                          className="w-7 h-7 rounded-full bg-white/10 flex items-center justify-center text-gray-400 font-bold text-[11px] flex-shrink-0"
+                        >
+                          G
+                        </div>
+                        <div className="min-w-0 flex-1 text-left">
+                          <p className="text-xs font-semibold text-gray-400 truncate leading-tight">Guest User</p>
+                          <Link href="/auth/login" className="text-[10px] text-[var(--color-gold-light)] hover:text-white truncate transition-colors text-left block mt-0.5">
+                            Sign in
+                          </Link>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
           ))}
         </nav>
 
         {/* ── Footer ─────────────────────────────────────── */}
-        <div className="border-t border-[var(--color-border)] flex-shrink-0">
-          {/* User row */}
-          {!collapsed && (
-            <div className="px-4 py-3 flex items-center gap-3">
-              {checkingAuth ? (
-                <div className="min-w-0 flex-1 py-1">
-                  <p className="text-xs text-gray-500 truncate">Checking session...</p>
-                </div>
-              ) : userEmail ? (
-                <>
-                  <div
-                    aria-hidden="true"
-                    className="w-7 h-7 rounded-full bg-[var(--color-accent)] flex items-center justify-center text-white font-bold text-[11px] flex-shrink-0"
-                  >
-                    {userEmail[0].toUpperCase()}
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="text-xs font-semibold text-white truncate">{userEmail}</p>
-                    <form action={logout}>
-                      <button type="submit" className="text-[10px] text-[var(--color-gold-light)] hover:text-white truncate transition-colors text-left">
-                        Sign out
-                      </button>
-                    </form>
-                  </div>
-                </>
-              ) : (
-                <>
-                  <div
-                    aria-hidden="true"
-                    className="w-7 h-7 rounded-full bg-white/10 flex items-center justify-center text-gray-400 font-bold text-[11px] flex-shrink-0"
-                  >
-                    G
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="text-xs font-semibold text-gray-400 truncate">Guest User</p>
-                    <Link href="/auth/login" className="text-[10px] text-[var(--color-gold-light)] hover:text-white truncate transition-colors text-left block">
-                      Sign in
-                    </Link>
-                  </div>
-                </>
-              )}
-            </div>
-          )}
-
+        <div className="border-t border-[var(--color-border)] flex-shrink-0 hidden lg:block">
           {/* Collapse toggle — desktop only */}
           <button
             onClick={toggleCollapsed}
             aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
-            className={cn(
-              "hidden lg:flex items-center justify-center w-full py-3 text-gray-600 hover:text-gray-300 hover:bg-white/[0.03] transition-colors",
-              "border-t border-[var(--color-border)]",
-            )}
+            className="flex items-center justify-center w-full py-3 text-gray-600 hover:text-gray-300 hover:bg-white/[0.03] transition-colors"
           >
             {collapsed
               ? <ChevronRight className="w-4 h-4" />

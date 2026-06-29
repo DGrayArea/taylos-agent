@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { createClient } from "@/lib/supabase/server";
 import { CaseDetail } from "@/components/cases/CaseDetail";
+import { getUserRole } from "@/lib/rbac";
 import { notFound } from "next/navigation";
 
 export async function generateMetadata(
@@ -23,11 +24,16 @@ export default async function CaseDetailPage({ params }: { params: Promise<{ id:
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
+  if (!user) notFound();
+
+  const { role, org_id } = await getUserRole(user.id);
+  if (!role || !org_id) notFound();
+
   const { data: caseData } = await supabase
     .from("cases")
     .select("*")
     .eq("id", id)
-    .eq("user_id", user?.id)
+    .eq("org_id", org_id)
     .maybeSingle();
 
   if (!caseData) notFound();
@@ -39,7 +45,7 @@ export default async function CaseDetailPage({ params }: { params: Promise<{ id:
       .from("reports")
       .select("data")
       .eq("id", caseData.report_id)
-      .eq("user_id", user?.id)
+      .eq("org_id", org_id)
       .maybeSingle();
     anomaly =
       (report?.data?.feature_2_anomalies?.anomaly_list ?? []).find(
@@ -47,5 +53,5 @@ export default async function CaseDetailPage({ params }: { params: Promise<{ id:
       ) ?? null;
   }
 
-  return <CaseDetail caseData={caseData} anomaly={anomaly} />;
+  return <CaseDetail caseData={caseData} anomaly={anomaly} userRole={role} />;
 }
