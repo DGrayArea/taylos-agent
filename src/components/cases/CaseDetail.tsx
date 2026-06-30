@@ -194,7 +194,10 @@ export function CaseDetail({ caseData: initialCase, anomaly, userRole }: Props) 
 
       {/* Tabs list */}
       <div className="flex gap-2 border-b border-white/5 pb-px overflow-x-auto whitespace-nowrap">
-        {(["summary", "documents", "chat", "timeline", "actions"] as const).map((tab) => (
+        {(userRole === "auditor"
+          ? (["summary", "documents", "chat", "timeline"] as const)
+          : (["summary", "documents", "chat", "timeline", "actions"] as const)
+        ).map((tab) => (
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
@@ -204,7 +207,12 @@ export function CaseDetail({ caseData: initialCase, anomaly, userRole }: Props) 
           >
             {tab === "chat" ? "AI Chat" : tab}
             {activeTab === tab && (
-              <motion.div layoutId="analystCaseDetailTabIndicator" className="absolute bottom-0 left-0 right-0 h-0.5 bg-[var(--color-gold)]" />
+              <motion.div
+                layoutId="analystCaseDetailTabIndicator"
+                className={`absolute bottom-0 left-0 right-0 h-0.5 ${
+                  userRole === "auditor" ? "bg-purple-500" : "bg-[var(--color-gold)]"
+                }`}
+              />
             )}
           </button>
         ))}

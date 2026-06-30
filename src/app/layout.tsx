@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { Header } from "@/components/layout/Header";
+import { WelcomeToast } from "@/components/layout/WelcomeToast";
 import { MobileMenuProvider } from "@/lib/MobileMenuContext";
 import { Geist } from "next/font/google";
 import { cn } from "@/lib/utils";
@@ -155,6 +156,8 @@ export default function RootLayout({
             <Sidebar />
             {/* Site-wide header / topbar */}
             <Header />
+            {/* Welcome notification toast */}
+            <WelcomeToast />
             <main className="flex-1 lg:pl-[var(--sidebar-width,256px)] min-h-screen transition-[padding] duration-300">
               <div id="main-content" className="pt-16 max-w-[1600px] mx-auto min-h-[calc(100vh-4rem)] px-4 md:px-6 lg:px-8">
                 {children}

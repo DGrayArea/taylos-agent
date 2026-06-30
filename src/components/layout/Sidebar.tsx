@@ -34,6 +34,7 @@ const navGroups: NavGroup[] = [
   {
     label: "Navigation",
     items: [
+      { icon: LayoutDashboard, label: "Dashboard",      href: "/", roles: ["auditor"] },
       { icon: FolderOpen, label: "Cases",          href: "/cases", roles: ["global_admin", "org_admin", "analyst", "auditor"] },
       { icon: History,    label: "Review History", href: "/history", roles: ["global_admin", "org_admin", "analyst", "auditor"] },
     ],

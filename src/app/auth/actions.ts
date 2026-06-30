@@ -292,6 +292,96 @@ export async function acceptInvitation(formData: FormData) {
   redirect('/auth/login?message=' + encodeURIComponent("Invitation accepted! Check your email to verify and sign in."))
 }
 
+export async function acceptInvitationForExistingUser(token: string, userId: string) {
+  const supabase = await createClient()
+
+  // Find invitation
+  const { data: invite, error: inviteError } = await supabaseAdmin
+    .from('org_invitations')
+    .select('*')
+    .eq('token', token)
+    .eq('status', 'pending')
+    .limit(1)
+    .maybeSingle()
+
+  if (inviteError || !invite) {
+    redirect('/auth/accept-invite?error=' + encodeURIComponent("Invalid or expired invitation token."))
+  }
+
+  // Check expiration
+  if (new Date(invite.expires_at) < new Date()) {
+    await supabaseAdmin
+      .from('org_invitations')
+      .update({ status: 'expired' })
+      .eq('invitation_id', invite.invitation_id)
+    redirect('/auth/accept-invite?error=' + encodeURIComponent("This invitation has expired."))
+  }
+
+  // Check if they are already in this organisation
+  const { data: existingRole } = await supabaseAdmin
+    .from('user_roles')
+    .select('id')
+    .eq('user_id', userId)
+    .eq('org_id', invite.org_id)
+    .limit(1)
+    .maybeSingle();
+
+  if (!existingRole) {
+    const { error: roleError } = await supabaseAdmin
+      .from('user_roles')
+      .insert({
+        user_id: userId,
+        org_id: invite.org_id,
+        role: invite.role,
+        status: 'active'
+      })
+
+    if (roleError) {
+      redirect(`/auth/accept-invite?token=${token}&error=` + encodeURIComponent(roleError.message))
+    }
+  }
+
+  // Mark invitation as accepted
+  await supabaseAdmin
+    .from('org_invitations')
+    .update({ status: 'accepted' })
+    .eq('invitation_id', invite.invitation_id)
+
+  revalidatePath('/', 'layout')
+  redirect(`/?joined=true&role=${invite.role}`)
+}
+
+export async function signInWithGoogleForInvite(token: string) {
+  const supabase = await createClient()
+  const { headers } = await import('next/headers')
+  const headerList = await headers()
+  const host = headerList.get('host')
+  const protocol = host?.startsWith('localhost') || host?.startsWith('127.0.0.1') ? 'http' : 'https'
+  const baseUrl = `${protocol}://${host}`
+  
+  // Set redirect to callback, passing token in the next URL parameter
+  const redirectUrl = new URL(`/auth/callback?next=${encodeURIComponent("/auth/accept-invite?token=" + token)}`, baseUrl).toString()
+
+  const { data, error } = await supabase.auth.signInWithOAuth({
+    provider: 'google',
+    options: {
+      redirectTo: redirectUrl,
+      queryParams: {
+        prompt: 'select_account',
+      },
+    },
+  })
+
+  if (error) {
+    redirect(`/auth/accept-invite?token=${token}&error=` + encodeURIComponent(error.message))
+  }
+
+  if (data.url) {
+    redirect(data.url)
+  }
+}
+
+
 // ============================================================
 // Team & Organization Management Server Actions (Scoped RBAC)
 // ============================================================
