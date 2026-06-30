@@ -1,36 +1,29 @@
 import type { Metadata } from "next";
 import { createClient } from "@/lib/supabase/server";
-import { AnalyticsDashboard } from "@/components/analytics/AnalyticsDashboard";
+import { getUserRole } from "@/lib/rbac";
+import { redirect } from "next/navigation";
+import { MyAnalyticsConsole } from "@/components/org/MyAnalyticsConsole";
 
 export const metadata: Metadata = {
-  title: "Analytics",
-  description:
-    "Aggregated financial intelligence metrics — anomaly trends, AI confidence scores, severity breakdowns, and case resolution rates across all reviewed documents.",
-  alternates: { canonical: "https://taylos-agent.vercel.app/analytics" },
-  openGraph: {
-    title: "Analytics | Taylos",
-    description: "Aggregated anomaly trends, confidence scores, and case resolution rates.",
-    url: "https://taylos-agent.vercel.app/analytics",
-  },
+  title: "My Analytics | Taylos",
+  description: "Your personal document review performance and case resolution activity metrics.",
 };
 
 export default async function AnalyticsPage() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
-  const { data: reports } = await supabase
-    .from("reports")
-    .select("id, created_at, issues, documents, status, data")
-    .eq("user_id", user?.id)
-    .order("created_at", { ascending: false })
-    .limit(100);
+  if (!user) {
+    redirect("/auth/login");
+  }
 
-  const { data: cases } = await supabase
-    .from("cases")
-    .select("id, status, severity, created_at")
-    .eq("user_id", user?.id)
-    .order("created_at", { ascending: false })
-    .limit(200);
+  const { role, org_id, org_name } = await getUserRole(user.id);
 
-  return <AnalyticsDashboard reports={reports ?? []} cases={cases ?? []} />;
+  if (role !== "analyst" || !org_id) {
+    redirect("/");
+  }
+
+  return (
+    <MyAnalyticsConsole orgId={org_id} orgName={org_name || "Organisation"} userId={user.id} />
+  );
 }

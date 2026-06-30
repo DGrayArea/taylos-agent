@@ -1,27 +1,29 @@
 import type { Metadata } from "next";
 import { createClient } from "@/lib/supabase/server";
-import { BatchManager } from "@/components/batch/BatchManager";
+import { getUserRole } from "@/lib/rbac";
+import { redirect } from "next/navigation";
+import { BatchJobsConsole } from "@/components/org/BatchJobsConsole";
 
 export const metadata: Metadata = {
-  title: "Batch Processing",
-  description:
-    "Submit up to 10,000 financial documents in a single batch job. Track parallel processing progress and download aggregated anomaly results.",
-  alternates: { canonical: "https://taylos-agent.vercel.app/batch" },
-  openGraph: {
-    title: "Batch Processing | Taylos",
-    description: "Process thousands of financial documents in parallel. Track progress and download results.",
-    url: "https://taylos-agent.vercel.app/batch",
-  },
+  title: "Batch Processing Jobs | Taylos",
+  description: "Submit multiple documents for simultaneous parallel processing checks.",
 };
 
-export default async function BatchPage() {
+export default async function BatchJobsPage() {
   const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
 
-  const { data: jobs } = await supabase
-    .from("batch_jobs")
-    .select("id, status, document_count, results, created_at, source")
-    .order("created_at", { ascending: false })
-    .limit(50);
+  if (!user) {
+    redirect("/auth/login");
+  }
 
-  return <BatchManager initialJobs={jobs ?? []} />;
+  const { role, org_id, org_name } = await getUserRole(user.id);
+
+  if (role !== "analyst" || !org_id) {
+    redirect("/");
+  }
+
+  return (
+    <BatchJobsConsole orgId={org_id} orgName={org_name || "Organisation"} />
+  );
 }

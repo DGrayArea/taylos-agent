@@ -4,10 +4,9 @@ import { useState } from "react";
 import Link from "next/link";
 import {
   AlertTriangle, CheckCircle, Clock, User, Plus, Filter,
-  ChevronRight, Calendar, Tag, Shield, MoreVertical,
-  Activity, ArrowUpRight, Ban, CheckSquare
+  ChevronRight, Calendar, Tag, Shield, Search
 } from "lucide-react";
-import { ComprehensiveAnalysis, Anomaly } from "@/lib/types";
+import { ComprehensiveAnalysis } from "@/lib/types";
 
 interface CaseRow {
   id: string;
@@ -24,15 +23,9 @@ interface CaseRow {
   updated_at?: string;
 }
 
-interface ReportRow {
-  id: string;
-  created_at: string;
-  data: ComprehensiveAnalysis;
-}
-
 interface Props {
   initialCases: CaseRow[];
-  reports: ReportRow[];
+  reports: any[];
   userRole?: string;
 }
 
@@ -47,17 +40,18 @@ const SEVERITY_COLORS: Record<string, string> = {
   CRITICAL: "text-red-400 bg-red-500/10 border-red-500/20",
   HIGH: "text-orange-400 bg-orange-500/10 border-orange-500/20",
   MEDIUM: "text-yellow-400 bg-yellow-400/10 border-yellow-400/20",
-  LOW: "text-blue-400 bg-blue-500/10 border-blue-500/20",
+  LOW: "text-green-400 bg-green-500/10 border-green-500/20",
 };
 
 function getCaseType(c: CaseRow) {
   if (c.title?.toLowerCase().includes("billing")) return "Billing Error";
   if (c.title?.toLowerCase().includes("ghost")) return "Ghost Vendor";
   if (c.title?.toLowerCase().includes("system")) return "System Glitch";
+  if (c.title?.toLowerCase().includes("customer")) return "Customer Error";
   if (c.title?.toLowerCase().includes("legitimate")) return "Legitimate";
   if (c.title?.toLowerCase().includes("fraud") || c.severity === "CRITICAL") return "Fraud";
   
-  const types = ["Billing Error", "Fraud", "Ghost Vendor", "System Glitch", "Legitimate"];
+  const types = ["Billing Error", "Fraud", "Ghost Vendor", "System Glitch", "Customer Error", "Legitimate"];
   const charCodeSum = c.id.split("").reduce((acc: number, char: string) => acc + char.charCodeAt(0), 0);
   return types[charCodeSum % types.length];
 }
@@ -67,43 +61,30 @@ function getCustomerRef(c: CaseRow) {
   return `ACC-${100000 + (charCodeSum % 900000)}`;
 }
 
-export function CasesList({ initialCases, reports, userRole }: Props) {
+export function CasesList({ initialCases }: Props) {
   const [cases, setCases] = useState<CaseRow[]>(initialCases);
   const [statusFilter, setStatusFilter] = useState<string>("all");
-  const [severityFilter, setSeverityFilter] = useState<string>("all");
-  const [showCreateModal, setShowCreateModal] = useState(false);
-  const [createForm, setCreateForm] = useState({ anomaly_id: "", report_id: "", title: "", description: "", severity: "MEDIUM", assignee: "" });
-  const [isCreating, setIsCreating] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
 
   const filtered = cases.filter((c) => {
+    // Status filter
     if (statusFilter !== "all" && c.status !== statusFilter) return false;
-    if (severityFilter !== "all" && c.severity !== severityFilter) return false;
+    
+    // Search filter
+    if (searchTerm.trim() !== "") {
+      const s = searchTerm.toLowerCase();
+      const caseType = getCaseType(c).toLowerCase();
+      const custRef = getCustomerRef(c).toLowerCase();
+      const title = c.title?.toLowerCase() || "";
+      const desc = c.description?.toLowerCase() || "";
+      const id = c.id.toLowerCase();
+      
+      if (!title.includes(s) && !desc.includes(s) && !caseType.includes(s) && !custRef.includes(s) && !id.includes(s)) {
+        return false;
+      }
+    }
     return true;
   });
-
-  const allAnomalies: Array<Anomaly & { reportId: string }> = reports.flatMap((r) =>
-    (r.data?.feature_2_anomalies?.anomaly_list ?? []).map((a) => ({ ...a, reportId: r.id })),
-  );
-
-  const handleCreate = async () => {
-    if (!createForm.anomaly_id || !createForm.title) return;
-    setIsCreating(true);
-    try {
-      const res = await fetch("/api/cases", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(createForm),
-      });
-      const data = await res.json();
-      if (data.case) {
-        setCases((prev) => [data.case, ...prev]);
-        setShowCreateModal(false);
-        setCreateForm({ anomaly_id: "", report_id: "", title: "", description: "", severity: "MEDIUM", assignee: "" });
-      }
-    } finally {
-      setIsCreating(false);
-    }
-  };
 
   const updateCaseStatus = async (id: string, newStatus: "open" | "in_review" | "escalated" | "resolved") => {
     try {
@@ -154,79 +135,46 @@ export function CasesList({ initialCases, reports, userRole }: Props) {
     return <span className="text-gray-300">{dateFormatted}</span>;
   }
 
-  const isOrgAdmin = userRole === "org_admin";
-
   return (
     <div className="p-4 md:p-8 max-w-7xl mx-auto space-y-8 pb-24 text-white text-[13px]">
-      {/* Header */}
-      <div className="flex flex-col md:flex-row items-start md:items-end justify-between gap-4">
-        <div>
-          <h1 className="text-3xl md:text-4xl font-bold mb-2">Case Management</h1>
-          <p className="text-gray-400 text-sm">
-            Track and resolve anomalies through structured cases with deadlines and team assignment.
-          </p>
-        </div>
-        {!isOrgAdmin && (
-          <button
-            onClick={() => setShowCreateModal(true)}
-            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-[var(--color-gold)] text-[var(--color-navy)] font-semibold text-sm hover:opacity-90 transition-opacity"
-          >
-            <Plus className="w-4 h-4" />
-            Open New Case
-          </button>
-        )}
+      {/* Top Header */}
+      <div>
+        <h1 className="text-3xl md:text-4xl font-bold mb-2">Cases</h1>
+        <p className="text-gray-400 text-sm">
+          View and action all cases assigned within your organisation
+        </p>
       </div>
 
-      {/* Summary stats */}
-      <div className="grid grid-cols-3 gap-4">
-        {(["open", "in_review", "resolved"] as const).map((s) => {
-          const cfg = STATUS_CONFIG[s] || STATUS_CONFIG.open;
-          const count = cases.filter((c) => c.status === s).length;
-          return (
+      {/* Filter and Search Bar */}
+      <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between border-b border-white/5 pb-4">
+        {/* Filter options */}
+        <div className="flex gap-1.5 overflow-x-auto whitespace-nowrap pb-1 md:pb-0">
+          {["all", "open", "in_review", "escalated", "resolved"].map((s) => (
             <button
               key={s}
-              onClick={() => setStatusFilter(statusFilter === s ? "all" : s)}
-              className={`rounded-2xl p-5 border transition-all text-left cursor-pointer ${
-                statusFilter === s ? "bg-white/10 border-white/20" : "bg-white/5 border-white/10 hover:bg-white/8"
+              onClick={() => setStatusFilter(s)}
+              className={`px-3.5 py-1.5 rounded-xl border text-xs font-bold transition-all cursor-pointer capitalize ${
+                statusFilter === s
+                  ? "bg-white/10 border-white/20 text-white"
+                  : "bg-transparent border-transparent text-gray-405 hover:text-white hover:bg-white/5"
               }`}
             >
-              <cfg.icon className={`w-5 h-5 mb-3 ${cfg.color}`} />
-              <div className={`text-2xl font-bold ${cfg.color}`}>{count}</div>
-              <div className="text-xs text-gray-400 mt-1 uppercase tracking-wider">{cfg.label}</div>
+              {s === "all" ? "All" : STATUS_CONFIG[s as keyof typeof STATUS_CONFIG]?.label || s}
             </button>
-          );
-        })}
-      </div>
-
-      {/* Filters */}
-      <div className="flex gap-3 flex-wrap">
-        <div className="flex items-center gap-2 text-sm text-gray-400">
-          <Filter className="w-4 h-4" />
-          Filter:
+          ))}
         </div>
-        {["all", "open", "in_review", "escalated", "resolved"].map((s) => (
-          <button
-            key={s}
-            onClick={() => setStatusFilter(s)}
-            className={`px-3 py-1.5 rounded-lg text-sm transition-all cursor-pointer ${
-              statusFilter === s ? "bg-white/15 text-white" : "text-gray-400 hover:text-white"
-            }`}
-          >
-            {s === "all" ? "All Status" : STATUS_CONFIG[s as keyof typeof STATUS_CONFIG]?.label || s}
-          </button>
-        ))}
-        <div className="w-px bg-white/10 mx-1" />
-        {["all", "CRITICAL", "HIGH", "MEDIUM", "LOW"].map((sev) => (
-          <button
-            key={sev}
-            onClick={() => setSeverityFilter(sev)}
-            className={`px-3 py-1.5 rounded-lg text-sm transition-all cursor-pointer ${
-              severityFilter === sev ? "bg-white/15 text-white" : "text-gray-400 hover:text-white"
-            }`}
-          >
-            {sev === "all" ? "All Severity" : sev}
-          </button>
-        ))}
+
+        {/* Search input */}
+        <div className="relative w-full md:w-72">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-550" />
+          <input
+            type="text"
+            placeholder="Search cases..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full bg-white/5 border border-white/10 rounded-xl pl-9 pr-4 py-2 text-xs text-white focus:outline-none focus:border-[var(--color-gold)]/50"
+          />
+        </div>
       </div>
 
       {/* Cases Table */}
@@ -238,7 +186,6 @@ export function CasesList({ initialCases, reports, userRole }: Props) {
                 <th className="py-3.5 px-4 font-mono">Case ID</th>
                 <th className="py-3.5 px-4">Type</th>
                 <th className="py-3.5 px-4">Customer Reference</th>
-                <th className="py-3.5 px-4">Assigned Analyst</th>
                 <th className="py-3.5 px-4 text-center">Priority</th>
                 <th className="py-3.5 px-4">Deadline</th>
                 <th className="py-3.5 px-4 text-center">Status</th>
@@ -248,7 +195,7 @@ export function CasesList({ initialCases, reports, userRole }: Props) {
             <tbody className="divide-y divide-white/5">
               {filtered.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="text-center py-16 text-gray-500">
+                  <td colSpan={7} className="text-center py-16 text-gray-500">
                     <Shield className="w-10 h-10 mx-auto mb-3 text-gray-700" />
                     No cases found.
                   </td>
@@ -274,9 +221,6 @@ export function CasesList({ initialCases, reports, userRole }: Props) {
                       </td>
                       <td className="py-3 px-4 font-medium text-gray-300">
                         {custRef}
-                      </td>
-                      <td className="py-3 px-4 text-gray-300">
-                        {c.assignee || <span className="text-gray-550 italic">Unassigned</span>}
                       </td>
                       <td className="py-3 px-4 text-center">
                         <span className={`inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold border ${
@@ -334,99 +278,6 @@ export function CasesList({ initialCases, reports, userRole }: Props) {
           </table>
         </div>
       </div>
-
-      {/* Create Modal */}
-      {showCreateModal && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-[#0c0d12] border border-white/15 rounded-3xl p-6 w-full max-w-lg shadow-2xl">
-            <h2 className="text-xl font-bold mb-5">Open New Case</h2>
-            <div className="space-y-4">
-              <div>
-                <label className="text-xs text-gray-400 uppercase tracking-wider block mb-1.5">Anomaly</label>
-                <select
-                  value={createForm.anomaly_id}
-                  onChange={(e) => {
-                    const anom = allAnomalies.find((a) => a.id === e.target.value);
-                    setCreateForm((p) => ({
-                      ...p,
-                      anomaly_id: e.target.value,
-                      report_id: anom?.reportId ?? "",
-                      title: anom ? `[${anom.type}] ${anom.description.slice(0, 60)}` : p.title,
-                      severity: anom?.severity ?? "MEDIUM",
-                    }));
-                  }}
-                  className="w-full bg-black/30 border border-white/10 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-[var(--color-gold)]/50"
-                >
-                  <option value="">Select an anomaly...</option>
-                  {allAnomalies.map((a) => (
-                    <option key={a.id} value={a.id}>
-                      [{a.severity}] {a.type} — {a.description.slice(0, 50)}
-                    </option>
-                  ))}
-                  <option value="manual">Manual (no linked anomaly)</option>
-                </select>
-              </div>
-              <div>
-                <label className="text-xs text-gray-400 uppercase tracking-wider block mb-1.5">Title</label>
-                <input
-                  value={createForm.title}
-                  onChange={(e) => setCreateForm((p) => ({ ...p, title: e.target.value }))}
-                  placeholder="Case title..."
-                  className="w-full bg-black/30 border border-white/10 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-[var(--color-gold)]/50"
-                />
-              </div>
-              <div>
-                <label className="text-xs text-gray-400 uppercase tracking-wider block mb-1.5">Description</label>
-                <textarea
-                  value={createForm.description}
-                  onChange={(e) => setCreateForm((p) => ({ ...p, description: e.target.value }))}
-                  placeholder="Additional context..."
-                  rows={3}
-                  className="w-full bg-black/30 border border-white/10 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-[var(--color-gold)]/50 resize-none"
-                />
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="text-xs text-gray-400 uppercase tracking-wider block mb-1.5">Severity</label>
-                  <select
-                    value={createForm.severity}
-                    onChange={(e) => setCreateForm((p) => ({ ...p, severity: e.target.value }))}
-                    className="w-full bg-black/30 border border-white/10 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-[var(--color-gold)]/50"
-                  >
-                    {["CRITICAL", "HIGH", "MEDIUM", "LOW"].map((s) => (
-                      <option key={s} value={s}>{s}</option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <label className="text-xs text-gray-400 uppercase tracking-wider block mb-1.5">Assignee</label>
-                  <input
-                    value={createForm.assignee}
-                    onChange={(e) => setCreateForm((p) => ({ ...p, assignee: e.target.value }))}
-                    placeholder="Name or email..."
-                    className="w-full bg-black/30 border border-white/10 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-[var(--color-gold)]/50"
-                  />
-                </div>
-              </div>
-              <div className="flex gap-3 pt-2">
-                <button
-                  onClick={() => setShowCreateModal(false)}
-                  className="flex-1 px-4 py-2 rounded-xl border border-white/10 text-sm text-gray-300 hover:text-white transition-colors"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleCreate}
-                  disabled={isCreating || !createForm.title || (!createForm.anomaly_id)}
-                  className="flex-1 px-4 py-2 rounded-xl bg-[var(--color-gold)] text-[var(--color-navy)] font-semibold text-sm disabled:opacity-50 hover:opacity-90 transition-opacity"
-                >
-                  {isCreating ? "Creating..." : "Open Case"}
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

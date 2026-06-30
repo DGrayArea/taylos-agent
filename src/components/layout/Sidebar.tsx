@@ -39,6 +39,14 @@ const navGroups: NavGroup[] = [
     ],
   },
   {
+    label: "Work",
+    items: [
+      { icon: UploadCloud, label: "Upload Documents", href: "/upload", roles: ["analyst"] },
+      { icon: Layers,      label: "Batch Jobs",       href: "/batch", roles: ["analyst"] },
+      { icon: BarChart3,   label: "Analytics",        href: "/analytics", roles: ["analyst"] },
+    ],
+  },
+  {
     label: "Integrations",
     items: [
       { icon: Code,       label: "APIs",     href: "/integrations/api", roles: ["org_admin"] },
