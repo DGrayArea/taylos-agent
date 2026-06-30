@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import "./globals.css";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { Header } from "@/components/layout/Header";
@@ -157,7 +158,9 @@ export default function RootLayout({
             {/* Site-wide header / topbar */}
             <Header />
             {/* Welcome notification toast */}
-            <WelcomeToast />
+            <Suspense fallback={null}>
+              <WelcomeToast />
+            </Suspense>
             <main className="flex-1 lg:pl-[var(--sidebar-width,256px)] min-h-screen transition-[padding] duration-300">
               <div id="main-content" className="pt-16 max-w-[1600px] mx-auto min-h-[calc(100vh-4rem)] px-4 md:px-6 lg:px-8">
                 {children}
