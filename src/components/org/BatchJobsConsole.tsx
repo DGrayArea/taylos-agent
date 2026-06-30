@@ -13,7 +13,8 @@ import {
   FileText,
   Trash2,
   X,
-  Play
+  Play,
+  Loader2
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
